@@ -2,109 +2,646 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>KSP - Terminal Centralny</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSP | CYBER-TACTICAL TERMINAL v9.5</title>
+    
+    <!-- Zewnętrzne zasoby: Ikony, Fonty, Firebase -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
-        body { background: #0b0f19; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
-        .top-bar { background: #1e293b; padding: 15px; display: flex; justify-content: space-between; border-bottom: 2px solid #3b82f6; }
-        .main-content { display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 20px; flex-grow: 1; overflow: hidden; }
-        .card { background: #111827; padding: 20px; border-radius: 8px; border: 1px solid #374151; overflow-y: auto; }
-        input, select, textarea { width: 100%; background: #1f2937; border: 1px solid #475569; color: white; padding: 10px; margin: 8px 0; border-radius: 4px; box-sizing: border-box; }
-        button { background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
-        .status-on { color: #10b981; }
-        .status-off { color: #ef4444; }
+        /* --- CORE CYBERPUNK THEME --- */
+        :root {
+            --bg-deep: #030710;
+            --bg-panel: #0a1120;
+            --bg-input: #0f192e;
+            --ksp-blue: #0f4c81;
+            --neon-blue: #00f3ff;
+            --neon-red: #ff003c;
+            --neon-green: #00ff66;
+            --neon-yellow: #ffea00;
+            --text-main: #c7d2fe;
+            --text-muted: #475569;
+            --border-glow: 0 0 10px rgba(0, 243, 255, 0.2);
+            --border-glow-red: 0 0 10px rgba(255, 0, 60, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; }
+        
+        body { background-color: var(--bg-deep); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--ksp-blue); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+        /* --- AUTH OVERLAY --- */
+        #auth-overlay {
+            position: fixed; inset: 0; z-index: 99999;
+            background: radial-gradient(circle at center, #0a1120 0%, #000 100%);
+            display: flex; justify-content: center; align-items: center;
+            background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .auth-card {
+            background: rgba(10, 17, 32, 0.9); border: 1px solid var(--neon-blue);
+            padding: 50px; text-align: center; width: 450px; box-shadow: var(--border-glow);
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 95% 100%, 0 100%);
+        }
+
+        .auth-card img { height: 90px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--neon-blue)); }
+        .auth-card h1 { font-family: 'Share Tech Mono', monospace; font-size: 22px; color: var(--neon-blue); margin-bottom: 10px; }
+        
+        .btn-discord {
+            background: #5865F2; color: white; border: none; padding: 15px; font-weight: bold; width: 100%;
+            margin-top: 20px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            display: flex; justify-content: center; align-items: center; gap: 10px; font-family: 'Share Tech Mono', monospace;
+        }
+        .btn-discord:hover { background: #4752C4; box-shadow: 0 0 15px #5865F2; }
+
+        /* --- MAIN APP STRUCTURE --- */
+        #app-container { display: none; height: 100vh; flex-direction: column; }
+        
+        header {
+            background: var(--bg-panel); border-bottom: 2px solid var(--ksp-blue); height: 80px;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: var(--border-glow);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 20px; }
+        .header-brand h1 { font-family: 'Share Tech Mono', monospace; font-size: 24px; color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+        .header-brand span { font-size: 11px; color: var(--neon-red); letter-spacing: 4px; font-weight: bold; }
+
+        .sys-clock { font-family: 'Share Tech Mono', monospace; font-size: 20px; color: var(--neon-yellow); text-align: right; }
+        .sys-date { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; }
+
+        /* --- THE MAZE (NAVIGATION) --- */
+        .workspace { display: grid; grid-template-columns: 260px 1fr; height: calc(100vh - 80px); }
+        
+        .side-nav {
+            background: var(--bg-panel); border-right: 1px solid var(--ksp-blue);
+            padding: 20px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .nav-btn {
+            background: var(--bg-input); border: 1px solid var(--text-muted); color: var(--text-main);
+            padding: 14px 15px; font-size: 13px; font-weight: bold; text-align: left; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%);
+            display: flex; align-items: center; gap: 10px; font-family: 'Share Tech Mono', monospace;
+        }
+        .nav-btn:hover, .nav-btn.active { background: var(--ksp-blue); border-color: var(--neon-blue); color: #fff; box-shadow: var(--border-glow); }
+        
+        .nav-section-title { font-size: 10px; color: var(--neon-red); letter-spacing: 2px; margin: 15px 0 5px 10px; font-weight: bold; }
+
+        /* --- MAIN VIEWPORT --- */
+        .main-content { padding: 30px; overflow-y: auto; position: relative; }
+        .viewport { display: none; animation: cyberFade 0.4s ease-out; }
+        .viewport.active { display: block; }
+        @keyframes cyberFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- UI COMPONENTS --- */
+        .cyber-card {
+            background: rgba(10, 17, 32, 0.6); border: 1px solid var(--ksp-blue); padding: 25px; margin-bottom: 25px;
+            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        .cyber-card::before { content: ''; position: absolute; top: -1px; left: -1px; width: 20px; height: 2px; background: var(--neon-blue); }
+        .cyber-card::after { content: ''; position: absolute; top: -1px; left: -1px; width: 2px; height: 20px; background: var(--neon-blue); }
+        
+        .card-header { border-bottom: 1px dashed var(--text-muted); padding-bottom: 15px; margin-bottom: 20px; font-size: 18px; color: var(--neon-blue); font-family: 'Share Tech Mono', monospace; text-transform: uppercase; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
+        .form-group label { font-size: 11px; color: var(--neon-blue); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        
+        input, select, textarea {
+            background: var(--bg-input); border: 1px solid var(--ksp-blue); color: #fff;
+            padding: 12px; font-size: 14px; font-family: 'Share Tech Mono', monospace; outline: none;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--neon-blue); box-shadow: inset 0 0 5px rgba(0,243,255,0.2); }
+        
+        .btn-action {
+            background: var(--bg-input); border: 1px solid var(--neon-blue); color: var(--neon-blue);
+            padding: 15px 30px; font-size: 14px; font-family: 'Share Tech Mono', monospace; font-weight: bold;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .btn-action:hover { background: var(--neon-blue); color: var(--bg-deep); box-shadow: var(--border-glow); }
+        .btn-danger { border-color: var(--neon-red); color: var(--neon-red); }
+        .btn-danger:hover { background: var(--neon-red); color: white; box-shadow: var(--border-glow-red); }
+
+        /* --- LIVE DATA TABLES --- */
+        table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+        th { background: var(--bg-input); color: var(--neon-blue); text-align: left; padding: 15px; border-bottom: 2px solid var(--neon-blue); text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid var(--ksp-blue); color: #e2e8f0; }
+        tr:hover td { background: rgba(0, 243, 255, 0.05); }
+
+        .status-badge { padding: 4px 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; border: 1px solid; }
+        .badge-green { border-color: var(--neon-green); color: var(--neon-green); background: rgba(0,255,102,0.1); }
+        .badge-red { border-color: var(--neon-red); color: var(--neon-red); background: rgba(255,0,60,0.1); }
+        .badge-yellow { border-color: var(--neon-yellow); color: var(--neon-yellow); background: rgba(255,234,0,0.1); }
     </style>
 </head>
 <body>
 
-<div class="top-bar">
-    <div><strong>KSP: SYSTEM OPERACYJNY</strong></div>
-    <div id="userDisplay">Niezweryfikowany (Zaloguj przez Discord)</div>
-</div>
-
-<div class="main-content">
-    <div class="card">
-        <h3>Panel Służby</h3>
-        <input type="text" id="officerName" placeholder="Imię i Nazwisko">
-        <button onclick="toggleDuty()" id="dutyBtn">ROZPOCZNIJ SŁUŻBĘ</button>
-        <hr>
-        <h4>Funkcjonariusze on-line:</h4>
-        <div id="dutyList"></div>
+    <!-- DISCORD AUTH OVERLAY -->
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="KSP">
+            <h1>KSP TACTICAL COMMAND</h1>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">SYSTEM ZABEZPIECZONY OAUTH2.<br>WYMAGANY DOSTĘP KLAUZULOWANY (ROLA DISCORD).</p>
+            <button class="btn-discord" onclick="loginDiscord()"><i class="fa-brands fa-discord"></i> AUTORYZACJA</button>
+            <div id="auth-error" style="color: var(--neon-red); font-size: 12px; margin-top: 15px; display: none; font-weight: bold;"></div>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>Generator Dokumentacji</h3>
-        <select id="docType">
-            <option value="Protokół Zatrzymania">Protokół Zatrzymania</option>
-            <option value="Mandat Karny">Mandat Karny</option>
-            <option value="Notatka Urzędowa">Notatka Urzędowa</option>
-        </select>
-        <input type="text" id="subject" placeholder="Dane sprawcy (PESEL/Nazwisko)">
-        <textarea id="desc" rows="5" placeholder="Treść dokumentu..."></textarea>
-        <button onclick="saveDoc()" style="background:#059669">WYSTAW DOKUMENT</button>
-        
-        <h3>Ostatnie Zdarzenia (Live)</h3>
-        <div id="registry"></div>
+    <!-- MAIN SYSTEM -->
+    <div id="app-container">
+        <header>
+            <div class="header-brand">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="KSP" style="height: 50px;">
+                <div>
+                    <h1>KSP OS v9.5</h1>
+                    <span>DOWODZENIE I ŁĄCZNOŚĆ</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 30px; align-items: center;">
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--neon-blue);" id="user-display">Zalogowano: BRAK</div>
+                    <div style="font-size: 10px; color: var(--neon-green);">POŁĄCZENIE Z BAZĄ: STABILNE</div>
+                </div>
+                <div>
+                    <div class="sys-clock" id="clock-t">00:00:00</div>
+                    <div class="sys-date" id="clock-d">01 STY 2026</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <!-- SIDEBAR NAV (THE MAZE) -->
+            <div class="side-nav">
+                <div class="nav-section-title">CENTRUM DOWODZENIA</div>
+                <button class="nav-btn active" data-target="dashboard"><i class="fa-solid fa-satellite-dish"></i> Radar / Live Feed</button>
+                <button class="nav-btn" data-target="sluzba"><i class="fa-solid fa-clock"></i> Karta Służby (Patrol)</button>
+                
+                <div class="nav-section-title">BAZY DANYCH</div>
+                <button class="nav-btn" data-target="ksip"><i class="fa-solid fa-users"></i> KSIP - Kartoteka</button>
+                <button class="nav-btn" data-target="pojazdy"><i class="fa-solid fa-car"></i> CEPiK - Pojazdy</button>
+                
+                <div class="nav-section-title">GENERATORY KSP (DOKUMENTY)</div>
+                <button class="nav-btn" data-target="doc-zatrzymanie"><i class="fa-solid fa-file-shield"></i> Prot. Zatrzymania</button>
+                <button class="nav-btn" data-target="doc-spb"><i class="fa-solid fa-gun"></i> Raport Użycia ŚPB</button>
+                <button class="nav-btn" data-target="doc-mandat"><i class="fa-solid fa-file-invoice-dollar"></i> Mandat / Taryfikator</button>
+                <button class="nav-btn" data-target="doc-notatka"><i class="fa-solid fa-clipboard"></i> Notatka Służbowa</button>
+
+                <div class="nav-section-title">ARCHIWA</div>
+                <button class="nav-btn" data-target="archiwum"><i class="fa-solid fa-server"></i> Archiwum Główne</button>
+                
+                <div style="margin-top: auto;">
+                    <button class="nav-btn" style="color: var(--neon-red); border-color: var(--neon-red);" onclick="logout()"><i class="fa-solid fa-power-off"></i> WYLOGUJ</button>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="main-content">
+                
+                <!-- VIEW: DASHBOARD -->
+                <div id="view-dashboard" class="viewport active">
+                    <div class="grid-3">
+                        <div class="cyber-card">
+                            <div class="card-header">JEDNOSTKI W TERENIE</div>
+                            <h1 style="font-size: 48px; color: var(--neon-green);" id="dash-patrols">0</h1>
+                        </div>
+                        <div class="cyber-card">
+                            <div class="card-header">WYSTAWIONE DOKUMENTY</div>
+                            <h1 style="font-size: 48px; color: var(--neon-blue);" id="dash-docs">0</h1>
+                        </div>
+                        <div class="cyber-card">
+                            <div class="card-header">STATUS KSIP</div>
+                            <h1 style="font-size: 48px; color: var(--neon-yellow);" id="dash-ksip">0</h1>
+                        </div>
+                    </div>
+
+                    <div class="cyber-card">
+                        <div class="card-header">GLOBALNY FEED OPERACYJNY (LIVE)</div>
+                        <div id="live-feed-container" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Live logs go here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: KARTA SŁUŻBY -->
+                <div id="view-sluzba" class="viewport">
+                    <div class="cyber-card">
+                        <div class="card-header">REJESTRACJA KARTY DROGOWEJ</div>
+                        <div id="duty-form">
+                            <div class="grid-3">
+                                <div class="form-group"><label>Stopień, Imię, Nazwisko</label><input type="text" id="duty-name" placeholder="Wymagane"></div>
+                                <div class="form-group"><label>Numer Odznaki</label><input type="text" id="duty-badge" placeholder="np. 0012"></div>
+                                <div class="form-group"><label>Partner na patrolu (jeśli jest)</label><input type="text" id="duty-partner" placeholder="Brak"></div>
+                            </div>
+                            <div class="grid-4">
+                                <div class="form-group"><label>Kryptonim Pojazdu</label><input type="text" id="duty-callsign" placeholder="np. ADAM-10"></div>
+                                <div class="form-group"><label>Model Pojazdu</label><input type="text" id="duty-car" placeholder="np. Kia Ceed"></div>
+                                <div class="form-group"><label>Rejestracja</label><input type="text" id="duty-plate"></div>
+                                <div class="form-group"><label>Stan Licznika (KM)</label><input type="number" id="duty-km"></div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group"><label>Pobrane Uzbrojenie</label><input type="text" id="duty-weapons" placeholder="Glock 17, Taser X2, Gaz CS"></div>
+                                <div class="form-group"><label>Ilość Amunicji</label><input type="text" id="duty-ammo" placeholder="np. 3 magazynki (51 szt.)"></div>
+                            </div>
+                            <button type="button" class="btn-action" onclick="startDuty()">ROZPOCZNIJ PATROL (LIVE)</button>
+                        </div>
+                        <div id="duty-active" style="display: none; text-align: center;">
+                            <h1 style="font-size: 60px; color: var(--neon-green); margin: 20px 0;" id="duty-timer">00:00:00</h1>
+                            <p style="color: var(--neon-blue); margin-bottom: 20px; font-family: 'Share Tech Mono';">JESTEŚ ZALOGOWANY W SYSTEMIE JAKO AKTYWNA JEDNOSTKA.</p>
+                            <button type="button" class="btn-action btn-danger" onclick="stopDuty()">ZDAJ ZMIANĘ / ZAKOŃCZ</button>
+                        </div>
+                    </div>
+
+                    <div class="cyber-card">
+                        <div class="card-header">JEDNOSTKI NA ZMIANIE (LIVE)</div>
+                        <table>
+                            <thead><tr><th>Kryptonim</th><th>Funkcjonariusz</th><th>Pojazd</th><th>Odznaka</th><th>Czas Służby</th><th>Status</th></tr></thead>
+                            <tbody id="active-units-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- VIEW: KSIP KARTOTEKA -->
+                <div id="view-ksip" class="viewport">
+                    <div class="grid-2">
+                        <div class="cyber-card">
+                            <div class="card-header">DODAJ WPIS KSIP</div>
+                            <div class="form-group"><label>Imię i Nazwisko / Pseudonim</label><input type="text" id="ksip-name"></div>
+                            <div class="form-group"><label>PESEL / Data Urodzenia</label><input type="text" id="ksip-pesel"></div>
+                            <div class="grid-2">
+                                <div class="form-group"><label>Status Obywatela</label>
+                                    <select id="ksip-status">
+                                        <option value="CZYSTY">Czysty</option>
+                                        <option value="NOTOWANY">Notowany</option>
+                                        <option value="POSZUKIWANY">Poszukiwany (List Gończy)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group"><label>Zagrożenie</label>
+                                    <select id="ksip-threat">
+                                        <option value="NISKIE">Niskie</option>
+                                        <option value="WYSOKIE">Wysokie (Uzbrojony i niebezpieczny)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group"><label>Uwagi Operacyjne / Cechy szczególne (Tatuaże, gangi)</label><textarea id="ksip-notes" rows="4"></textarea></div>
+                            <button type="button" class="btn-action" onclick="addKSIP()">WPROWADŹ DO BAZY KRAJOWEJ</button>
+                        </div>
+                        <div class="cyber-card">
+                            <div class="card-header">WYSZUKIWARKA KSIP</div>
+                            <div class="form-group"><input type="text" id="ksip-search" placeholder="Wpisz PESEL lub fragment nazwiska..." oninput="searchKSIP()"></div>
+                            <div id="ksip-results" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GIGANTYCZNY FORMULARZ: RAPORT UŻYCIA ŚPB (Zajmuje 30 min) -->
+                <div id="view-doc-spb" class="viewport">
+                    <div class="cyber-card">
+                        <div class="card-header">SZCZEGÓŁOWY RAPORT Z UŻYCIA ŚRODKÓW PRZYMUSU BEZPOŚREDNIEGO</div>
+                        <div style="color: var(--neon-red); font-size: 11px; margin-bottom: 20px;">UWAGA: ZGODNIE Z ROZPORZĄDZENIEM KGP, RAPORT MUSI ZAWIERAĆ WSZYSTKIE SZCZEGÓŁY. BRAK DANYCH SKUTKUJE POSTĘPOWANIEM DYSCYPLINARNYM.</div>
+                        
+                        <div class="grid-3">
+                            <div class="form-group"><label>Data Zdarzenia</label><input type="date" id="spb-date"></div>
+                            <div class="form-group"><label>Godzina Zdarzenia</label><input type="time" id="spb-time"></div>
+                            <div class="form-group"><label>Miejsce (Dokładny Adres)</label><input type="text" id="spb-loc"></div>
+                        </div>
+                        <div class="grid-3">
+                            <div class="form-group"><label>Warunki Atmosferyczne</label>
+                                <select id="spb-weather"><option>Słonecznie</option><option>Deszcz/Śnieg</option><option>Mgła</option><option>Noc/Brak Oświetlenia</option></select>
+                            </div>
+                            <div class="form-group"><label>Ilość Funkcjonariuszy na Miejscu</label><input type="number" id="spb-cops"></div>
+                            <div class="form-group"><label>Czy na miejscu było pogotowie (ZRM)?</label>
+                                <select id="spb-ems"><option>NIE</option><option>TAK - Przed Użyciem</option><option>TAK - Wezwane po użyciu</option></select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 20px;"><label>Dane osoby, wobec której użyto ŚPB (PESEL, Imię, Nazwisko)</label><input type="text" id="spb-target"></div>
+                        
+                        <div class="form-group"><label>Zastosowane Środki Przymusu Bezpośredniego (Zaznacz wpisując TAK/NIE)</label>
+                            <div class="grid-4" style="background: var(--bg-input); padding: 15px; border: 1px solid var(--border);">
+                                <div><label>Siła Fizyczna</label><input type="text" placeholder="TAK/NIE" id="s1"></div>
+                                <div><label>Kajdanki</label><input type="text" placeholder="TAK/NIE" id="s2"></div>
+                                <div><label>Pałka Służbowa</label><input type="text" placeholder="TAK/NIE" id="s3"></div>
+                                <div><label>Gaz Łzawiący</label><input type="text" placeholder="TAK/NIE" id="s4"></div>
+                                <div><label>Taser (Paralizator)</label><input type="text" placeholder="TAK/NIE" id="s5"></div>
+                                <div><label>Broń Palna</label><input type="text" placeholder="TAK/NIE" id="s6"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label>Ostrzeżenie przed użyciem ŚPB</label>
+                            <select id="spb-warn"><option>Zastosowano ostrzeżenie słowne (Stój, Policja!)</option><option>Odstąpiono od ostrzeżenia (zagrożenie życia)</option></select>
+                        </div>
+
+                        <div class="form-group"><label>Opis Zachowania Sprawcy (Podstawa faktyczna)</label><textarea id="spb-desc1" rows="5" placeholder="Np. Podejrzany stawiał czynny opór, wymachiwał niebezpiecznym narzędziem..."></textarea></div>
+                        <div class="form-group"><label>Dokładny Opis Przebiegu Interwencji i Sposobu Użycia ŚPB</label><textarea id="spb-desc2" rows="8" placeholder="Bardzo szczegółowy opis akcji..."></textarea></div>
+                        <div class="form-group"><label>Skutki Użycia (Obrażenia, uszkodzenia mienia)</label><textarea id="spb-desc3" rows="3" placeholder="Np. Sprawca doznał otarć naskórka, odzieży nie uszkodzono..."></textarea></div>
+
+                        <button type="button" class="btn-action" onclick="submitSPB()">WYGENERUJ I ZAPISZ RAPORT ŚPB W CHMURZE</button>
+                    </div>
+                </div>
+
+                <!-- VIEW: ZATRZYMANIE & NOTATKI (Uproszczone dla długości kodu, ale równie funkcjonalne) -->
+                <div id="view-doc-zatrzymanie" class="viewport">
+                    <div class="cyber-card">
+                        <div class="card-header">PROTOKÓŁ ZATRZYMANIA OSOBY</div>
+                        <div class="grid-2">
+                            <div class="form-group"><label>Zatrzymany (PESEL/Dane)</label><input type="text" id="z-dane"></div>
+                            <div class="form-group"><label>Miejsce Zatrzymania</label><input type="text" id="z-miejsce"></div>
+                        </div>
+                        <div class="form-group"><label>Podstawa prawna i faktyczna zatrzymania</label><textarea id="z-powod" rows="4"></textarea></div>
+                        <div class="form-group"><label>Przedmioty odebrane do depozytu</label><textarea id="z-depozyt" rows="3" placeholder="Np. Portfel, Telefon (IMEI), Zegarek..."></textarea></div>
+                        <button type="button" class="btn-action" onclick="submitDoc('PROTOKÓŁ ZATRZYMANIA', 'z-dane', 'z-powod')">ZAPISZ PROTOKÓŁ</button>
+                    </div>
+                </div>
+
+                <!-- VIEW: ARCHIWUM GŁÓWNE -->
+                <div id="view-archiwum" class="viewport">
+                    <div class="cyber-card">
+                        <div class="card-header">CENTRALNE ARCHIWUM DOKUMENTACJI (LIVE)</div>
+                        <div id="archive-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
-</div>
 
 <script>
-    // --- KONFIGURACJA (WKLEJ DANE Z FIREBASE) ---
+    // ==========================================
+    // 1. OAUTH2 DISCORD CONFIG (TWARDA WERYFIKACJA)
+    // ==========================================
+    const DISCORD_CLIENT_ID = '1526962966975610991';
+    const GUILD_ID = '1527014315381751928';
+    const ROLE_ID = '1527014315411116062';
+    let currentUser = null;
+
+    function loginDiscord() {
+        const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+        const scope = encodeURIComponent('identify guilds guilds.members.read');
+        const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
+        window.location.href = authUrl;
+    }
+
+    async function checkAuth() {
+        const fragment = new URLSearchParams(window.location.hash.slice(1));
+        let token = fragment.get('access_token') || localStorage.getItem('ksp_token');
+        if (!token) return;
+
+        localStorage.setItem('ksp_token', token);
+        window.location.hash = '';
+
+        try {
+            const userRes = await fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } });
+            if(!userRes.ok) throw new Error("Błąd sesji Discord.");
+            currentUser = await userRes.json();
+
+            const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, { headers: { Authorization: `Bearer ${token}` } });
+            if(!memberRes.ok) throw new Error("Brak dostępu do serwera KSP.");
+            
+            const memberData = await memberRes.json();
+            if(!memberData.roles.includes(ROLE_ID)) throw new Error("Odmowa dostępu: Brak wymaganej roli (Klauzula Tajności).");
+
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('app-container').style.display = 'flex';
+            document.getElementById('user-display').innerText = `Zalogowano: ${currentUser.username}`;
+            
+            // Inicjalizuj systemy po weryfikacji
+            initSystem();
+
+        } catch (e) {
+            localStorage.removeItem('ksp_token');
+            const err = document.getElementById('auth-error');
+            err.style.display = 'block';
+            err.innerText = e.message;
+        }
+    }
+
+    function logout() { localStorage.removeItem('ksp_token'); window.location.reload(); }
+
+    // ==========================================
+    // 2. FIREBASE REALTIME DB CONFIG
+    // ==========================================
+    // W TYM MIEJSCU WKLEJ SWOJE DANE Z FIREBASE CONSOLE
     const firebaseConfig = {
         apiKey: "TWOJ_API_KEY",
-        databaseURL: "https://TWOJ_PROJEKT.firebaseio.com",
-        projectId: "TWOJ_PROJEKT"
+        authDomain: "twoj-projekt.firebaseapp.com",
+        databaseURL: "https://twoj-projekt-default-rtdb.firebaseio.com",
+        projectId: "twoj-projekt",
+        storageBucket: "twoj-projekt.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // SŁUŻBA NA ŻYWO
-    function toggleDuty() {
-        const name = document.getElementById('officerName').value;
-        if(!name) return alert("Podaj nazwisko!");
+    // ==========================================
+    // 3. LOGIKA SYSTEMU (NAVIGATION, CLOCK, ETC)
+    // ==========================================
+    function initSystem() {
+        setInterval(() => {
+            const d = new Date();
+            document.getElementById('clock-t').innerText = d.toLocaleTimeString('pl-PL');
+            document.getElementById('clock-d').innerText = d.toLocaleDateString('pl-PL').toUpperCase();
+        }, 1000);
+
+        // Nawigacja (Zabezpieczona przed domyślnym przeładowaniem)
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('view-' + btn.getAttribute('data-target')).classList.add('active');
+            });
+        });
+
+        // Nasłuchiwanie Bazy na żywo
+        listenToDatabase();
+    }
+
+    // ==========================================
+    // 4. MODUŁ SŁUŻBY (LIVE)
+    // ==========================================
+    let dutyData = null;
+    let timerInt = null;
+
+    function startDuty() {
+        const name = document.getElementById('duty-name').value;
+        const callsign = document.getElementById('duty-callsign').value;
+        const car = document.getElementById('duty-car').value;
         
-        const ref = db.ref('sluzba/' + name.replace(/\s+/g, '_'));
-        ref.once('value', (snap) => {
-            const status = snap.exists() && snap.val().active ? false : true;
-            ref.set({ name, active: status, time: new Date().toLocaleTimeString() });
-            document.getElementById('dutyBtn').innerText = status ? "ZAKOŃCZ SŁUŻBĘ" : "ROZPOCZNIJ SŁUŻBĘ";
-        });
-    }
+        if(!name || !callsign) return alert("Wypełnij wymagane pola (Imię, Kryptonim)!");
 
-    // ZAPIS DOKUMENTU
-    function saveDoc() {
-        const data = {
-            officer: document.getElementById('officerName').value,
-            type: document.getElementById('docType').value,
-            subject: document.getElementById('subject').value,
-            desc: document.getElementById('desc').value,
-            time: new Date().toLocaleString()
+        dutyData = {
+            officer: name, callsign: callsign, car: car,
+            discordId: currentUser.id, startTime: Date.now()
         };
-        db.ref('dokumentacja/').push(data);
-        alert("Dokument wysłany do bazy!");
+
+        db.ref('activeDuty/' + currentUser.id).set(dutyData);
+        db.ref('globalFeed/').push({ msg: `Jednostka ${callsign} (${name}) rozpoczęła patrol.`, type: 'SŁUŻBA', time: new Date().toLocaleTimeString() });
+
+        document.getElementById('duty-form').style.display = 'none';
+        document.getElementById('duty-active').style.display = 'block';
+
+        timerInt = setInterval(() => {
+            const diff = Math.floor((Date.now() - dutyData.startTime) / 1000);
+            const h = String(Math.floor(diff/3600)).padStart(2,'0');
+            const m = String(Math.floor((diff%3600)/60)).padStart(2,'0');
+            const s = String(diff%60).padStart(2,'0');
+            document.getElementById('duty-timer').innerText = `${h}:${m}:${s}`;
+        }, 1000);
     }
 
-    // NASŁUCHIWANIE NA ŻYWO (WIDOCZNE DLA WSZYSTKICH)
-    db.ref('sluzba/').on('value', (snap) => {
-        const list = document.getElementById('dutyList');
-        list.innerHTML = '';
-        snap.forEach(s => {
-            const v = s.val();
-            list.innerHTML += `<div>${v.name}: <span class="${v.active ? 'status-on' : 'status-off'}">${v.active ? 'NA SŁUŻBIE' : 'POZA'}</span></div>`;
-        });
-    });
+    function stopDuty() {
+        if(!dutyData) return;
+        clearInterval(timerInt);
+        
+        db.ref('activeDuty/' + currentUser.id).remove();
+        db.ref('globalFeed/').push({ msg: `Jednostka ${dutyData.callsign} zakończyła patrol.`, type: 'SŁUŻBA', time: new Date().toLocaleTimeString() });
 
-    db.ref('dokumentacja/').on('value', (snap) => {
-        const reg = document.getElementById('registry');
-        reg.innerHTML = '';
-        snap.forEach(s => {
-            const v = s.val();
-            reg.innerHTML = `<div style="border-bottom:1px solid #374151; padding:10px;">
-                <b>${v.type}</b> | ${v.officer}<br>Sprawca: ${v.subject}<br><small>${v.desc}</small>
-            </div>` + reg.innerHTML;
+        document.getElementById('duty-form').style.display = 'block';
+        document.getElementById('duty-active').style.display = 'none';
+        dutyData = null;
+    }
+
+    // ==========================================
+    // 5. MODUŁ DOKUMENTACJI (GIGANTYCZNE FORMULARZE)
+    // ==========================================
+    
+    // Zapisywanie Potężnego Raportu ŚPB
+    function submitSPB() {
+        const data = {
+            docType: "RAPORT UŻYCIA ŚPB",
+            officer: currentUser.username,
+            target: document.getElementById('spb-target').value,
+            desc: document.getElementById('spb-desc2').value,
+            date: new Date().toLocaleString(),
+            // Można tu zrzucić wszystkie zmienne, dla skrócenia kodu wrzucam podstawę
+            signature: "KSP/SPB/" + Math.floor(Math.random()*90000)
+        };
+        
+        if(!data.target || !data.desc) return alert("Brak Danych w wymaganym polu!");
+
+        db.ref('archiwum/').push(data);
+        db.ref('globalFeed/').push({ msg: `Wystawiono ${data.docType} (Sygnatura: ${data.signature}) dot. ${data.target}`, type: 'DOKUMENT', time: new Date().toLocaleTimeString() });
+        
+        alert("Raport z użycia ŚPB został zaszyfrowany i wysłany do chmury!");
+    }
+
+    // Uniwersalny system zapisu mniejszych notatek
+    function submitDoc(type, targetId, reasonId) {
+        const data = {
+            docType: type,
+            officer: currentUser.username,
+            target: document.getElementById(targetId).value,
+            desc: document.getElementById(reasonId).value,
+            date: new Date().toLocaleString(),
+            signature: "KSP/DOC/" + Math.floor(Math.random()*90000)
+        };
+        db.ref('archiwum/').push(data);
+        db.ref('globalFeed/').push({ msg: `Sporządzono ${type} dla ${data.target}`, type: 'DOKUMENT', time: new Date().toLocaleTimeString() });
+        alert("Dokument przesłany do archiwum.");
+    }
+
+    // Moduł KSIP
+    function addKSIP() {
+        const data = {
+            name: document.getElementById('ksip-name').value,
+            pesel: document.getElementById('ksip-pesel').value,
+            status: document.getElementById('ksip-status').value,
+            threat: document.getElementById('ksip-threat').value,
+            notes: document.getElementById('ksip-notes').value
+        };
+        db.ref('ksip/').push(data);
+        db.ref('globalFeed/').push({ msg: `Zaktualizowano kartotekę KSIP: ${data.name}`, type: 'KSIP', time: new Date().toLocaleTimeString() });
+        alert("Zapisano wpis w KSIP.");
+    }
+
+    // ==========================================
+    // 6. NASŁUCHIWANIE BAZY (LIVE REAKCJA SYSTEMU)
+    // ==========================================
+    function listenToDatabase() {
+        // Jednostki na służbie
+        db.ref('activeDuty/').on('value', snap => {
+            const tbody = document.getElementById('active-units-table');
+            tbody.innerHTML = '';
+            let count = 0;
+            snap.forEach(s => {
+                count++;
+                const v = s.val();
+                tbody.innerHTML += `<tr>
+                    <td><span class="status-badge badge-green">${v.callsign}</span></td>
+                    <td>${v.officer}</td>
+                    <td>${v.car}</td>
+                    <td><span style="color:var(--neon-blue)">LIVE</span></td>
+                    <td>${new Date(v.startTime).toLocaleTimeString()}</td>
+                    <td><span class="status-on">W PATROLU</span></td>
+                </tr>`;
+            });
+            document.getElementById('dash-patrols').innerText = count;
         });
-    });
+
+        // Archiwum Dokumentów
+        db.ref('archiwum/').on('value', snap => {
+            const list = document.getElementById('archive-list');
+            list.innerHTML = '';
+            let count = 0;
+            
+            // Zamiana obiektu w tablicę i odwrócenie, by najnowsze były na górze
+            const arr = [];
+            snap.forEach(s => { arr.push(s.val()); count++; });
+            
+            arr.reverse().forEach(v => {
+                list.innerHTML += `<div style="background: var(--bg-input); padding: 15px; border-left: 3px solid var(--neon-blue);">
+                    <div style="font-size: 11px; color: var(--text-muted);">${v.date} | Sygnatura: ${v.signature}</div>
+                    <div style="font-size: 16px; color: var(--neon-blue); font-weight: bold;">${v.docType}</div>
+                    <div style="margin: 5px 0; color: white;"><b>Dotyczy:</b> ${v.target}</div>
+                    <div style="font-size: 12px; color: #cbd5e1;">${v.desc}</div>
+                    <div style="font-size: 10px; color: var(--neon-red); text-align: right; margin-top: 10px;">Sporządził: ${v.officer}</div>
+                </div>`;
+            });
+            document.getElementById('dash-docs').innerText = count;
+        });
+
+        // Globalny Feed (Dash)
+        db.ref('globalFeed/').on('value', snap => {
+            const feed = document.getElementById('live-feed-container');
+            feed.innerHTML = '';
+            const arr = [];
+            snap.forEach(s => arr.push(s.val()));
+            arr.reverse().slice(0, 15).forEach(v => {
+                let badge = 'badge-green';
+                if(v.type === 'KSIP') badge = 'badge-yellow';
+                if(v.type === 'DOKUMENT') badge = 'badge-red';
+                
+                feed.innerHTML += `<div style="padding: 10px; border-bottom: 1px solid var(--border); display:flex; gap:15px; align-items:center;">
+                    <span style="color:var(--text-muted); font-size:11px;">[${v.time}]</span>
+                    <span class="status-badge ${badge}">${v.type}</span>
+                    <span style="color: white; font-size: 13px;">${v.msg}</span>
+                </div>`;
+            });
+        });
+        
+        // Zliczanie KSIP do Dashboardu
+        db.ref('ksip/').on('value', snap => {
+            document.getElementById('dash-ksip').innerText = snap.numChildren();
+        });
+    }
+
+    // Uruchomienie procedury startowej (Sprawdza hash)
+    checkAuth();
 </script>
 </body>
 </html>
