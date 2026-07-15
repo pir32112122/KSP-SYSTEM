@@ -1,0 +1,43 @@
+KSP — URUCHOMIENIE ONLINE NA RENDER
+===================================
+
+DLACZEGO NIE GITHUB PAGES?
+GitHub Pages wyświetla tylko statyczne HTML/CSS/JS. Nie uruchamia serwera Node.js,
+więc server.js wklejony do index.html pojawia się jako zwykły tekst, a /auth/login daje 404.
+
+CO MA BYĆ W REPOZYTORIUM:
+- server.js
+- package.json
+- render.yaml
+- .gitignore
+
+Usuń index.html zawierający kod server.js. Wyłącz GitHub Pages dla tego repozytorium.
+
+WDROŻENIE:
+1. Wrzuć cztery pliki powyżej do głównego katalogu repozytorium KSP-SYSTEM.
+2. Wejdź na Render i wybierz New -> Blueprint.
+3. Połącz repozytorium KSP-SYSTEM.
+4. Render odczyta render.yaml.
+5. Podczas tworzenia wpisz DISCORD_CLIENT_SECRET. Nie wrzucaj go na GitHub.
+6. Zaczekaj na wdrożenie. Adres powinien wyglądać podobnie do:
+   https://ksp-system-pir32112122.onrender.com
+7. W Discord Developer Portal -> OAuth2 -> Redirects dodaj DOKŁADNIE:
+   https://ksp-system-pir32112122.onrender.com/auth/callback
+   Użyj rzeczywistego adresu przydzielonego przez Render, jeśli jest inny.
+8. Otwieraj stronę z adresu onrender.com, NIE z github.io.
+
+TEST LOKALNY:
+npm install
+PowerShell:
+$env:DISCORD_CLIENT_SECRET="TWOJ_SECRET"
+$env:SESSION_SECRET="bardzo-dlugi-losowy-sekret-minimum-32-znaki"
+$env:BASE_URL="http://localhost:3000"
+npm start
+
+Następnie otwórz http://localhost:3000 i ustaw w Discordzie callback:
+http://localhost:3000/auth/callback
+
+UWAGA O BAZIE:
+Lokalna baza JSON działa prawidłowo. Na darmowym hostingu plik może zostać usunięty
+przy ponownym wdrożeniu lub restarcie instancji. Do trwałego systemu wieloosobowego
+należy później podłączyć bazę PostgreSQL lub trwały dysk.
