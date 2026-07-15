@@ -3,151 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KSP - Krajowy System Informacyjny Policji</title>
+    <title>KSP - Krajowy System Informacyjno-Operacyjny</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
-        /* --- MODERN PROFESSIONAL DARK THEME --- */
+        /* --- MODERN BLUE & WHITE THEME (ENTERPRISE) --- */
         :root {
-            --bg-body: #0f172a;
-            --bg-panel: #1e293b;
-            --bg-input: #334155;
-            --border: #475569;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --text-main: #f8fafc;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-sidebar: #0f2b5b; /* Deep Police Blue */
+            --bg-sidebar-hover: #1e40af;
+            --primary-blue: #1d4ed8;
+            --primary-light: #eff6ff;
+            --border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-normal: #475569;
             --text-muted: #94a3b8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
+            --text-white: #ffffff;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background-color: var(--bg-body); color: var(--text-dark); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-body); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* --- AUTH OVERLAY --- */
         #auth-overlay {
             position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg-body);
+            background: linear-gradient(135deg, #0f2b5b 0%, #1e40af 100%);
             display: flex; justify-content: center; align-items: center;
         }
         .auth-card {
-            background: var(--bg-panel); border: 1px solid var(--border);
-            padding: 40px; border-radius: 12px; text-align: center; width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: var(--bg-card); border-radius: 16px; padding: 50px 40px;
+            text-align: center; width: 450px; box-shadow: var(--shadow-lg);
         }
-        .auth-card img { height: 80px; margin-bottom: 20px; }
-        .auth-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
-        .auth-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; }
+        .auth-card img { height: 90px; margin-bottom: 25px; }
+        .auth-card h2 { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 10px; }
+        .auth-card p { font-size: 14px; color: var(--text-normal); margin-bottom: 30px; line-height: 1.6; }
         
         .btn-discord {
-            background: #5865F2; color: white; border: none; padding: 12px 20px; font-weight: 600; width: 100%;
-            border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 14px;
+            background: #5865F2; color: white; border: none; padding: 14px 20px; font-weight: 700; width: 100%;
+            border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 15px; transition: 0.2s;
         }
-        .btn-discord:hover { background: #4752C4; }
+        .btn-discord:hover { background: #4752C4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(88,101,242,0.3); }
 
         /* --- LAYOUT --- */
         #app-container { display: none; height: 100vh; flex-direction: column; }
         
         header {
-            background: var(--bg-panel); border-bottom: 1px solid var(--border); height: 70px;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 24px;
+            background: var(--bg-card); border-bottom: 1px solid var(--border); height: 75px;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px; box-shadow: var(--shadow); z-index: 10;
         }
-        .header-brand { display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 18px; letter-spacing: 0.5px;}
-        .header-brand img { height: 40px; }
-        .header-user { display: flex; align-items: center; gap: 20px; font-size: 13px; }
-        .clock { font-family: monospace; font-size: 16px; font-weight: 600; color: var(--primary); }
+        .header-brand { display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 20px; color: var(--bg-sidebar); }
+        .header-brand img { height: 45px; }
+        .header-user { display: flex; align-items: center; gap: 25px; font-size: 14px; }
+        .clock { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--primary-blue); }
 
-        .workspace { display: grid; grid-template-columns: 240px 1fr; height: calc(100vh - 70px); }
+        .workspace { display: grid; grid-template-columns: 260px 1fr; height: calc(100vh - 75px); }
         
         /* --- SIDEBAR --- */
-        .sidebar { background: var(--bg-panel); border-right: 1px solid var(--border); padding: 15px 10px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
-        .nav-section { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 15px 0 5px 10px; letter-spacing: 1px; }
+        .sidebar { background: var(--bg-sidebar); color: var(--text-white); padding: 20px 15px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+        .nav-section { font-size: 11px; font-weight: 800; color: #93c5fd; text-transform: uppercase; margin: 20px 0 8px 10px; letter-spacing: 1.5px; opacity: 0.8; }
         
         .nav-btn {
-            background: transparent; border: none; color: var(--text-main); padding: 12px 15px; font-size: 13px; font-weight: 500;
-            text-align: left; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;
+            background: transparent; border: none; color: #e2e8f0; padding: 14px 18px; font-size: 14px; font-weight: 600;
+            text-align: left; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s;
         }
-        .nav-btn i { font-size: 15px; width: 20px; text-align: center; color: var(--text-muted); }
-        .nav-btn:hover { background: var(--bg-input); }
-        .nav-btn.active { background: var(--primary); color: white; font-weight: 600; }
-        .nav-btn.active i { color: white; }
+        .nav-btn i { font-size: 16px; width: 20px; text-align: center; }
+        .nav-btn:hover { background: var(--bg-sidebar-hover); color: white; }
+        .nav-btn.active { background: white; color: var(--bg-sidebar); font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-btn.active i { color: var(--primary-blue); }
 
         /* --- MAIN AREA --- */
-        .main-content { padding: 24px; overflow-y: auto; background: var(--bg-body); }
+        .main-content { padding: 30px; overflow-y: auto; background: var(--bg-body); }
         .viewport { display: none; }
         .viewport.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- CARDS & FORMS --- */
-        .card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-header { font-size: 15px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); }
+        .card-header { font-size: 16px; font-weight: 800; border-bottom: 2px solid var(--primary-light); padding-bottom: 15px; margin-bottom: 25px; color: var(--bg-sidebar); display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+        .card-header i { color: var(--primary-blue); }
         
-        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
-        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
-        .form-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .form-group label { font-size: 12px; font-weight: 700; color: var(--text-normal); text-transform: uppercase; letter-spacing: 0.5px; }
         
         input, select, textarea {
-            background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);
-            padding: 10px 14px; font-size: 14px; border-radius: 6px; outline: none; transition: 0.2s;
+            background: #f8fafc; border: 1px solid #cbd5e1; color: var(--text-dark);
+            padding: 12px 16px; font-size: 14px; border-radius: 8px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.2); }
+        input:focus, select:focus, textarea:focus { background: white; border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-light); }
         
-        /* Checkboxy */
-        .checkbox-group { display: flex; gap: 10px; align-items: center; font-size: 13px; margin-top: 5px; }
-        .checkbox-group input { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+        .checkbox-group { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 500; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .checkbox-group input { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--primary-blue); }
 
         .btn-action {
-            background: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 13px; font-weight: 600;
-            border-radius: 6px; cursor: pointer; transition: 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px;
+            background: var(--primary-blue); color: white; border: none; padding: 14px 28px; font-size: 14px; font-weight: 700;
+            border-radius: 8px; cursor: pointer; transition: 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 10px; text-transform: uppercase;
         }
-        .btn-action:hover { background: var(--primary-hover); }
+        .btn-action:hover { background: var(--bg-sidebar-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
         .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-secondary { background: var(--bg-input); border: 1px solid var(--border); }
-        .btn-secondary:hover { background: var(--border); }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-outline { background: white; color: var(--text-dark); border: 1px solid var(--border); }
+        .btn-outline:hover { background: #f1f5f9; }
 
         /* --- TABLES --- */
-        .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-        th { background: var(--bg-input); color: var(--text-muted); font-weight: 600; padding: 12px 16px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; }
-        td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-main); }
+        .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: white; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: #f8fafc; color: var(--text-normal); font-weight: 700; padding: 16px; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 12px; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); color: var(--text-dark); font-weight: 500; }
         tr:last-child td { border-bottom: none; }
-        tr:hover td { background: rgba(255,255,255,0.02); }
+        tr:hover td { background: var(--primary-light); }
 
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .bg-success { background: rgba(16,185,129,0.2); color: var(--success); border: 1px solid var(--success); }
-        .bg-danger { background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid var(--danger); }
-        .bg-warning { background: rgba(245,158,11,0.2); color: var(--warning); border: 1px solid var(--warning); }
-        .bg-primary { background: rgba(37,99,235,0.2); color: var(--primary); border: 1px solid var(--primary); }
-
-        /* --- LISTY LIVE FEED --- */
-        .feed-item { padding: 12px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
-        .feed-item:last-child { border-bottom: none; }
-        .feed-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
-        .feed-title { font-weight: 600; font-size: 14px; color: var(--primary); }
-        .feed-desc { font-size: 13px; color: var(--text-main); line-height: 1.4; }
+        .badge { padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .bg-success { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .bg-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .bg-warning { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .bg-primary { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
 
         /* --- TARYFIKATOR UI --- */
-        .tariff-container { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-        .tariff-list { border: 1px solid var(--border); border-radius: 8px; height: 500px; overflow-y: auto; }
-        .tariff-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
-        .tariff-item:hover { background: var(--bg-input); }
-        .tariff-item.selected { background: rgba(37,99,235,0.2); border-left: 3px solid var(--primary); }
-        .tariff-summary { background: var(--bg-input); padding: 20px; border-radius: 8px; text-align: center; }
-        .tariff-sum-value { font-size: 32px; font-weight: 700; margin: 10px 0; color: white; }
+        .tariff-container { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .tariff-list { border: 1px solid var(--border); border-radius: 12px; height: 500px; overflow-y: auto; background: white; }
+        .tariff-item { padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .tariff-item:hover { background: #f8fafc; }
+        .tariff-item.selected { background: var(--primary-light); border-left: 4px solid var(--primary-blue); }
+        .tariff-summary { background: #f8fafc; padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .tariff-sum-value { font-size: 40px; font-weight: 800; margin: 15px 0; color: var(--text-dark); }
+        
+        .stat-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 25px; text-align: center; box-shadow: var(--shadow); }
+        .stat-box-title { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-box-value { font-size: 42px; font-weight: 800; color: var(--primary-blue); margin-top: 10px; }
 
     </style>
 </head>
@@ -157,10 +158,10 @@
     <div id="auth-overlay">
         <div class="auth-card">
             <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Logo">
-            <h2>KRAJOWY SYSTEM POLICJI</h2>
-            <p>System informatyczny o ograniczonym dostępie. Zaloguj się kontem Discord przypisanym do jednostki operacyjnej.</p>
-            <button class="btn-discord" onclick="loginDiscord()"><i class="fa-brands fa-discord"></i> Zaloguj przez Discord</button>
-            <div id="auth-error" style="color: var(--danger); font-size: 13px; margin-top: 15px; font-weight: 600; display: none;"></div>
+            <h2>KRAJOWY SYSTEM INFORMATYCZNY</h2>
+            <p>System informacyjny o ograniczonym dostępie. Wymagana autoryzacja tożsamości poprzez serwer dyspozytorski.</p>
+            <button class="btn-discord" onclick="loginDiscord()"><i class="fa-brands fa-discord"></i> Uwierzytelnij (Discord)</button>
+            <div id="auth-error" style="color: var(--danger); font-size: 13px; margin-top: 20px; font-weight: 700; background: #fee2e2; padding: 10px; border-radius: 6px; display: none;"></div>
         </div>
     </div>
 
@@ -170,13 +171,13 @@
         <header>
             <div class="header-brand">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Logo">
-                <span>TERMINAL KSP v9.0</span>
+                <span>TERMINAL KSP</span>
             </div>
             <div class="header-user">
                 <div class="clock" id="sys-clock">00:00:00</div>
-                <div style="border-left: 1px solid var(--border); height: 30px; margin: 0 10px;"></div>
-                <div id="user-display" style="font-weight: 600; color: var(--primary);">Zalogowano: -</div>
-                <button class="btn-action btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="logout()">Wyloguj</button>
+                <div style="width: 2px; height: 30px; background: var(--border);"></div>
+                <div id="user-display" style="font-weight: 700; color: var(--bg-sidebar);">Zalogowano: -</div>
+                <button class="btn-action btn-outline" style="padding: 8px 16px; font-size: 12px;" onclick="logout()">Wyloguj</button>
             </div>
         </header>
 
@@ -184,23 +185,26 @@
         <div class="workspace">
             <!-- SIDEBAR -->
             <div class="sidebar">
-                <div class="nav-section">Operacyjne</div>
-                <button class="nav-btn active" data-target="dashboard"><i class="fa-solid fa-table-columns"></i> Główny Panel</button>
-                <button class="nav-btn" data-target="sluzba"><i class="fa-solid fa-clipboard-user"></i> Status Służby</button>
+                <div class="nav-section">Stanowisko Kierowania</div>
+                <button class="nav-btn active" data-target="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+                <button class="nav-btn" data-target="zbrojownia"><i class="fa-solid fa-boxes-stacked"></i> Zbrojownia & Magazyn</button>
+                <button class="nav-btn" data-target="sluzba"><i class="fa-solid fa-user-shield"></i> Status Służby (Patrole)</button>
                 
-                <div class="nav-section">Bazy Danych (Krajowe)</div>
-                <button class="nav-btn" data-target="ksip"><i class="fa-solid fa-users"></i> KSIP (Osoby)</button>
-                <button class="nav-btn" data-target="cepik"><i class="fa-solid fa-car"></i> CEPiK (Pojazdy)</button>
-                <button class="nav-btn" data-target="taryfikator"><i class="fa-solid fa-scale-balanced"></i> Taryfikator MSWiA</button>
+                <div class="nav-section">Rejestry Państwowe</div>
+                <button class="nav-btn" data-target="ksip"><i class="fa-solid fa-id-card"></i> Baza KSIP (Osoby)</button>
+                <button class="nav-btn" data-target="cepik"><i class="fa-solid fa-car"></i> Baza CEPiK (Pojazdy)</button>
+                <button class="nav-btn" data-target="bron"><i class="fa-solid fa-gun"></i> Rejestr Broni</button>
+                <button class="nav-btn" data-target="taryfikator"><i class="fa-solid fa-scale-balanced"></i> Taryfikator Wykroczeń</button>
 
-                <div class="nav-section">Formularze / Protokoły</div>
+                <div class="nav-section">Sporządzanie Dokumentacji</div>
                 <button class="nav-btn" data-target="f-zatrzymanie"><i class="fa-solid fa-handcuffs"></i> Prot. Zatrzymania</button>
+                <button class="nav-btn" data-target="f-przeszukanie"><i class="fa-solid fa-magnifying-glass-plus"></i> Prot. Przeszukania</button>
                 <button class="nav-btn" data-target="f-mandat"><i class="fa-solid fa-money-bill-wave"></i> Mandat Karny</button>
-                <button class="nav-btn" data-target="f-spb"><i class="fa-solid fa-shield-halved"></i> Raport ŚPB</button>
-                <button class="nav-btn" data-target="f-notatka"><i class="fa-solid fa-file-lines"></i> Notatka Służbowa</button>
+                <button class="nav-btn" data-target="f-spb"><i class="fa-solid fa-shield-halved"></i> Raport z Użycia ŚPB</button>
+                <button class="nav-btn" data-target="f-notatka"><i class="fa-solid fa-file-signature"></i> Notatka Służbowa</button>
 
-                <div class="nav-section">Archiwa Systemowe</div>
-                <button class="nav-btn" data-target="archiwum"><i class="fa-solid fa-server"></i> Rejestr Dokumentów</button>
+                <div class="nav-section">Centralne Archiwa</div>
+                <button class="nav-btn" data-target="archiwum"><i class="fa-solid fa-folder-open"></i> Ewidencja Dokumentów</button>
             </div>
 
             <!-- MAIN CONTENT -->
@@ -208,28 +212,59 @@
                 
                 <!-- VIEW: DASHBOARD -->
                 <div id="view-dashboard" class="viewport active">
-                    <div class="grid-4">
-                        <div class="card" style="text-align: center; padding: 20px;">
-                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">AKTYWNE PATROLE</div>
-                            <div style="font-size: 36px; font-weight: 700; color: var(--primary); margin-top: 10px;" id="stat-patrols">0</div>
+                    <div class="grid-4" style="margin-bottom: 30px;">
+                        <div class="stat-box">
+                            <div class="stat-box-title">Jednostki W Terenie</div>
+                            <div class="stat-box-value" id="stat-patrols">0</div>
                         </div>
-                        <div class="card" style="text-align: center; padding: 20px;">
-                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">WYSTAWIONE DOKUMENTY</div>
-                            <div style="font-size: 36px; font-weight: 700; color: var(--success); margin-top: 10px;" id="stat-docs">0</div>
+                        <div class="stat-box">
+                            <div class="stat-box-title">Wydane Przedmioty</div>
+                            <div class="stat-box-value" style="color: var(--warning);" id="stat-gear">0</div>
                         </div>
-                        <div class="card" style="text-align: center; padding: 20px;">
-                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">REJESTR KSIP</div>
-                            <div style="font-size: 36px; font-weight: 700; color: var(--warning); margin-top: 10px;" id="stat-ksip">0</div>
+                        <div class="stat-box">
+                            <div class="stat-box-title">Wpisy w KSIP</div>
+                            <div class="stat-box-value" style="color: var(--success);" id="stat-ksip">0</div>
                         </div>
-                        <div class="card" style="text-align: center; padding: 20px;">
-                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">REJESTR CEPiK</div>
-                            <div style="font-size: 36px; font-weight: 700; color: var(--text-main); margin-top: 10px;" id="stat-cepik">0</div>
+                        <div class="stat-box">
+                            <div class="stat-box-title">Archiwum Dokumentów</div>
+                            <div class="stat-box-value" style="color: var(--text-dark);" id="stat-docs">0</div>
                         </div>
                     </div>
 
                     <div class="card">
-                        <div class="card-header"><i class="fa-solid fa-satellite-dish"></i> GLOBALNY NASŁUCH OPERACYJNY (LIVE FEED)</div>
+                        <div class="card-header"><i class="fa-solid fa-rss"></i> DZIENNIK OPERACYJNY (LIVE FEED)</div>
                         <div id="live-feed" style="max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+
+                <!-- VIEW: ZBROJOWNIA / MAGAZYN -->
+                <div id="view-zbrojownia" class="viewport">
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><i class="fa-solid fa-boxes-stacked"></i> POBRANIE SPRZĘTU Z MAGAZYNU</div>
+                            <form id="gear-form">
+                                <div class="form-group"><label>Funkcjonariusz Pobierający</label><input type="text" id="gear-officer" required></div>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Numer Radiostacji (Nasłuch)</label><input type="text" id="gear-radio" placeholder="np. R-102"></div>
+                                    <div class="form-group"><label>Numer Kamery Nasobnej (Bodycam)</label><input type="text" id="gear-bodycam" placeholder="np. BC-44"></div>
+                                </div>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Broń Krótka (Model + Nr Seryjny)</label><input type="text" id="gear-gun" placeholder="np. Glock 17 SN:1234"></div>
+                                    <div class="form-group"><label>Taser (Nr Seryjny)</label><input type="text" id="gear-taser" placeholder="np. T-X2 991"></div>
+                                </div>
+                                <div class="form-group"><label>Inne (Alkomat, Narkotest, Kolczatka)</label><textarea id="gear-other" rows="2"></textarea></div>
+                                <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-hand-holding-hand"></i> ZATWIERDŹ POBRANIE SPRZĘTU</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><i class="fa-solid fa-clipboard-list"></i> EWIDENCJA WYDANEGO SPRZĘTU (LIVE)</div>
+                            <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+                                <table>
+                                    <thead><tr><th>Funkcjonariusz</th><th>Radio/Kamera</th><th>Uzbrojenie</th><th>Akcja</th></tr></thead>
+                                    <tbody id="gear-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -237,7 +272,7 @@
                 <div id="view-sluzba" class="viewport">
                     <div class="grid-2">
                         <div class="card">
-                            <div class="card-header"><i class="fa-solid fa-clipboard-user"></i> ROZPOCZĘCIE ZMIANY</div>
+                            <div class="card-header"><i class="fa-solid fa-clipboard-user"></i> KARTA DROGOWA - ROZPOCZĘCIE SŁUŻBY</div>
                             <form id="duty-form">
                                 <div class="grid-2">
                                     <div class="form-group"><label>Stopień, Imię i Nazwisko</label><input type="text" id="duty-name" required></div>
@@ -245,24 +280,27 @@
                                 </div>
                                 <div class="grid-2">
                                     <div class="form-group"><label>Kryptonim Patrolu</label><input type="text" id="duty-callsign" placeholder="np. ADAM-10" required></div>
-                                    <div class="form-group"><label>Pojazd</label><input type="text" id="duty-car" placeholder="Marka i Rejestracja"></div>
+                                    <div class="form-group"><label>Pojazd (Model i Rejestracja)</label><input type="text" id="duty-car" placeholder="np. Kia Ceed HPZ A11"></div>
                                 </div>
-                                <div class="form-group"><label>Wyposażenie Pobrane z Zbrojowni</label><input type="text" id="duty-gear" placeholder="Broń długa, taser, alkomat..."></div>
-                                <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-play"></i> ROZPOCZNIJ PATROL (LIVE)</button>
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Stan Licznika (Wyjazd)</label><input type="number" id="duty-km-start"></div>
+                                    <div class="form-group"><label>Partner</label><input type="text" id="duty-partner" placeholder="Opcjonalnie"></div>
+                                </div>
+                                <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-play"></i> WYSTAW PATROL W TEREN</button>
                             </form>
                             
                             <div id="duty-active" style="display: none; text-align: center; padding: 20px 0;">
-                                <div style="font-size: 12px; font-weight: 600; color: var(--success); letter-spacing: 1px;">JESTEŚ W AKTYWNYM PATROLU</div>
-                                <div id="duty-timer" style="font-size: 48px; font-weight: 700; font-family: monospace; margin: 15px 0;">00:00:00</div>
-                                <button type="button" class="btn-action btn-danger" style="width: 100%;" onclick="stopDuty()"><i class="fa-solid fa-stop"></i> ZAKOŃCZ SŁUŻBĘ I ZAPISZ CZAS</button>
+                                <div class="badge bg-success" style="font-size: 13px;">PATROL AKTYWNY</div>
+                                <div id="duty-timer" style="font-size: 50px; font-weight: 800; font-family: monospace; margin: 20px 0; color: var(--text-dark);">00:00:00</div>
+                                <button type="button" class="btn-action btn-danger" style="width: 100%;" onclick="stopDuty()"><i class="fa-solid fa-stop"></i> ZAKOŃCZ PATROL I ROZLICZ CZAS</button>
                             </div>
                         </div>
 
                         <div class="card">
-                            <div class="card-header"><i class="fa-solid fa-walkie-talkie"></i> JEDNOSTKI W TERENIE (LIVE)</div>
+                            <div class="card-header"><i class="fa-solid fa-location-dot"></i> JEDNOSTKI W TERENIE (LIVE)</div>
                             <div class="table-wrapper">
                                 <table>
-                                    <thead><tr><th>Kryptonim</th><th>Funkcjonariusz</th><th>Pojazd</th></tr></thead>
+                                    <thead><tr><th>Kryptonim</th><th>Funkcjonariusze</th><th>Pojazd</th></tr></thead>
                                     <tbody id="active-units-table"></tbody>
                                 </table>
                             </div>
@@ -271,11 +309,10 @@
 
                     <!-- TABELA ZBIORCZA GODZIN -->
                     <div class="card">
-                        <div class="card-header"><i class="fa-solid fa-chart-pie"></i> EWIDENCJA CZASU SŁUŻBY (ZSUMOWANE)</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Tabela automatycznie grupuje godziny i liczbę patroli po numerze odznaki i nazwisku funkcjonariusza.</div>
+                        <div class="card-header"><i class="fa-solid fa-business-time"></i> EWIDENCJA CZASU SŁUŻBY (ZSUMOWANE MIESIĘCZNIE)</div>
                         <div class="table-wrapper">
                             <table>
-                                <thead><tr><th>Odznaka</th><th>Imię i Nazwisko</th><th>Łączny Czas w Służbie</th><th>Ilość Patroli</th></tr></thead>
+                                <thead><tr><th>Odznaka</th><th>Stopień, Imię i Nazwisko</th><th>Łączny Czas (Godziny : Minuty)</th><th>Ilość Zmian</th></tr></thead>
                                 <tbody id="aggregated-hours-table"></tbody>
                             </table>
                         </div>
@@ -286,27 +323,26 @@
                 <div id="view-ksip" class="viewport">
                     <div class="grid-2">
                         <div class="card">
-                            <div class="card-header"><i class="fa-solid fa-user-plus"></i> DODAJ WPIS KARTOTEKOWY</div>
+                            <div class="card-header"><i class="fa-solid fa-user-plus"></i> DODAJ OBYWATELA DO KSIP</div>
                             <form id="ksip-form">
                                 <div class="grid-2">
                                     <div class="form-group"><label>Imię i Nazwisko</label><input type="text" id="ksip-name" required></div>
-                                    <div class="form-group"><label>PESEL</label><input type="text" id="ksip-pesel" required></div>
+                                    <div class="form-group"><label>PESEL / Data Urodzenia</label><input type="text" id="ksip-pesel" required></div>
                                 </div>
                                 <div class="grid-2">
-                                    <div class="form-group"><label>Status Kryminalny</label>
+                                    <div class="form-group"><label>Status Obywatela</label>
                                         <select id="ksip-status">
-                                            <option value="CZYSTY">Czysty</option>
-                                            <option value="NOTOWANY">Notowany</option>
-                                            <option value="POSZUKIWANY">Poszukiwany Listem Gończym</option>
+                                            <option value="CZYSTY">Czysty (Brak notowań)</option>
+                                            <option value="NOTOWANY">Notowany Kryminalnie</option>
+                                            <option value="POSZUKIWANY">Poszukiwany (Zatrzymać)</option>
                                         </select>
                                     </div>
-                                    <div class="form-group"><label>Ocena Zagrożenia</label>
-                                        <select id="ksip-threat"><option value="NISKIE">Niskie</option><option value="ŚREDNIE">Średnie</option><option value="WYSOKIE">Wysokie (Niebezpieczny)</option></select>
+                                    <div class="form-group"><label>Poziom Zagrożenia</label>
+                                        <select id="ksip-threat"><option value="NISKIE">Niskie</option><option value="ŚREDNIE">Średnie</option><option value="WYSOKIE">Wysokie (Agresywny)</option></select>
                                     </div>
                                 </div>
-                                <div class="form-group"><label>Adres Zameldowania</label><input type="text" id="ksip-address"></div>
-                                <div class="form-group"><label>Notatki Operacyjne (Znaki szczególne, powiązania)</label><textarea id="ksip-notes" rows="4"></textarea></div>
-                                <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-database"></i> ZAPISZ W BAZIE KRAJOWEJ</button>
+                                <div class="form-group"><label>Znak Szczególne / Powiązania / Adres</label><textarea id="ksip-notes" rows="4"></textarea></div>
+                                <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-cloud-arrow-up"></i> ZAPISZ W KARTOTECE</button>
                             </form>
                         </div>
                         <div class="card">
@@ -335,10 +371,9 @@
                                 <div class="form-group"><label>Właściciel (Imię i Nazwisko / PESEL)</label><input type="text" id="cepik-owner" required></div>
                                 <div class="grid-3">
                                     <div class="form-group"><label>Ubezpieczenie OC</label><select id="cepik-oc"><option value="WAŻNE">Ważne</option><option value="BRAK">Brak / Wygasło</option></select></div>
-                                    <div class="form-group"><label>Przegląd Techniczny</label><select id="cepik-pt"><option value="WAŻNY">Ważny</option><option value="BRAK">Brak / Zatrzymany</option></select></div>
-                                    <div class="form-group"><label>Status Kradzieży</label><select id="cepik-stolen"><option value="CZYSTY">Czysty</option><option value="POSZUKIWANY">Poszukiwany (Kradzież)</option></select></div>
+                                    <div class="form-group"><label>Przegląd (PT)</label><select id="cepik-pt"><option value="WAŻNY">Ważny</option><option value="BRAK">Brak / Zatrzymany</option></select></div>
+                                    <div class="form-group"><label>Kradzież</label><select id="cepik-stolen"><option value="CZYSTY">Czysty</option><option value="POSZUKIWANY">Skradziony</option></select></div>
                                 </div>
-                                <div class="form-group"><label>Uwagi</label><input type="text" id="cepik-notes"></div>
                                 <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-upload"></i> WPROWADŹ DO CEPiK</button>
                             </form>
                         </div>
@@ -355,118 +390,154 @@
                     </div>
                 </div>
 
+                <!-- VIEW: REJESTR BRONI -->
+                <div id="view-bron" class="viewport">
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><i class="fa-solid fa-gun"></i> REJESTRACJA BRONI PALNEJ</div>
+                            <form id="weapon-form">
+                                <div class="grid-2">
+                                    <div class="form-group"><label>Numer Seryjny Broni</label><input type="text" id="weap-serial" required></div>
+                                    <div class="form-group"><label>Typ i Kaliber</label><input type="text" id="weap-type" placeholder="np. Pistolet 9mm" required></div>
+                                </div>
+                                <div class="form-group"><label>Zarejestrowany Właściciel (Imię i Nazwisko)</label><input type="text" id="weap-owner" required></div>
+                                <div class="form-group"><label>Status Zezwolenia</label><select id="weap-status"><option value="LEGALNA">Legalna (Pozwolenie Ważne)</option><option value="NIELEGALNA">Nielegalna / Skradziona</option><option value="COFNIĘTO">Pozwolenie Cofnięte</option></select></div>
+                                <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-plus"></i> DODAJ BROŃ DO BAZY</button>
+                            </form>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><i class="fa-solid fa-magnifying-glass"></i> WYSZUKIWARKA BRONI</div>
+                            <div class="form-group"><input type="text" id="weap-search" placeholder="Wpisz numer seryjny..." oninput="searchWeapon()"></div>
+                            <div id="weap-results" class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+                                <table>
+                                    <thead><tr><th>Nr Seryjny</th><th>Właściciel</th><th>Status</th></tr></thead>
+                                    <tbody id="weap-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- VIEW: TARYFIKATOR -->
                 <div id="view-taryfikator" class="viewport">
                     <div class="card">
                         <div class="card-header"><i class="fa-solid fa-scale-balanced"></i> KALKULATOR MANDATOWY MSWiA</div>
                         <div class="tariff-container">
                             <div>
-                                <div class="form-group"><input type="text" id="tariff-search" placeholder="Szukaj wykroczenia..." oninput="filterTariff()"></div>
+                                <div class="form-group"><input type="text" id="tariff-search" placeholder="Szukaj wykroczenia (np. prędkość, parkowanie)..." oninput="filterTariff()"></div>
                                 <div class="tariff-list" id="tariff-list"></div>
                             </div>
                             <div class="tariff-summary">
-                                <h3>PODSUMOWANIE KARY</h3>
-                                <div style="color: var(--text-muted); font-size: 12px; margin-top: 20px;">SUMA MANDATU</div>
-                                <div class="tariff-sum-value" id="calc-fine">0 PLN</div>
-                                <div style="color: var(--text-muted); font-size: 12px; margin-top: 20px;">PUNKTY KARNE</div>
-                                <div class="tariff-sum-value" style="color: var(--danger);" id="calc-points">0 pkt</div>
-                                <button type="button" class="btn-action" style="width: 100%; margin-top: 30px;" onclick="transferToMandate()"><i class="fa-solid fa-arrow-right"></i> PRZENIEŚ DO FORMULARZA</button>
-                                <button type="button" class="btn-action btn-secondary" style="width: 100%; margin-top: 10px;" onclick="resetTariff()"><i class="fa-solid fa-rotate-right"></i> WYCZYŚĆ</button>
+                                <h3 style="font-size: 14px; color: var(--text-muted); text-transform: uppercase;">Podsumowanie Kary</h3>
+                                <div style="margin-top: 30px;">
+                                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">SUMA MANDATU</div>
+                                    <div class="tariff-sum-value" id="calc-fine">0 PLN</div>
+                                </div>
+                                <div style="margin-top: 30px;">
+                                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">PUNKTY KARNE</div>
+                                    <div class="tariff-sum-value" style="color: var(--danger);" id="calc-points">0 pkt</div>
+                                </div>
+                                <button type="button" class="btn-action" style="width: 100%; margin-top: 40px;" onclick="transferToMandate()"><i class="fa-solid fa-file-export"></i> WYSTAW MANDAT</button>
+                                <button type="button" class="btn-action btn-outline" style="width: 100%; margin-top: 15px;" onclick="resetTariff()"><i class="fa-solid fa-rotate-left"></i> RESETUJ</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- GIGANTYCZNE FORMULARZE DOKUMENTÓW -->
-                <!-- 1. PROTOKÓŁ ZATRZYMANIA -->
+                <!-- FORMULARZE DOKUMENTACJI -->
+                
+                <!-- 1. ZATRZYMANIE -->
                 <div id="view-f-zatrzymanie" class="viewport">
                     <div class="card">
                         <div class="card-header"><i class="fa-solid fa-handcuffs"></i> PROTOKÓŁ ZATRZYMANIA OSOBY</div>
-                        <form onsubmit="submitForm(event, 'PROTOKÓŁ ZATRZYMANIA')">
+                        <form onsubmit="submitDoc(event, 'PROTOKÓŁ ZATRZYMANIA')">
                             <div class="grid-3">
-                                <div class="form-group"><label>Data Zatrzymania</label><input type="date" class="d-date" required></div>
-                                <div class="form-group"><label>Godzina</label><input type="time" class="d-time" required></div>
-                                <div class="form-group"><label>Miejsce Zatrzymania (Dokładny Adres)</label><input type="text" class="d-loc" required></div>
+                                <div class="form-group"><label>Data i Godzina</label><input type="datetime-local" class="doc-time" required></div>
+                                <div class="form-group"><label>Miejsce Zatrzymania</label><input type="text" class="doc-loc" required></div>
+                                <div class="form-group"><label>Zatrzymany (Dane / PESEL)</label><input type="text" class="doc-subject" required></div>
                             </div>
-                            <div class="nav-section" style="margin-left:0;">DANE OSOBY ZATRZYMANEJ</div>
-                            <div class="grid-3">
-                                <div class="form-group"><label>Imię i Nazwisko</label><input type="text" class="d-subject" required></div>
-                                <div class="form-group"><label>PESEL</label><input type="text" class="d-pesel" required></div>
-                                <div class="form-group"><label>Imiona Rodziców</label><input type="text" class="d-parents"></div>
+                            <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">POUCZENIA (Wymagane)</div>
+                            <div class="grid-3" style="margin-bottom: 20px;">
+                                <div class="checkbox-group"><input type="checkbox" required> Podano przyczynę zatrzymania</div>
+                                <div class="checkbox-group"><input type="checkbox" required> Pouczono o prawach</div>
+                                <div class="checkbox-group"><input type="checkbox"> Żąda kontaktu z adwokatem</div>
                             </div>
-                            <div class="nav-section" style="margin-left:0;">POUCZENIA I PRAWA ZATRZYMANEGO</div>
-                            <div class="grid-3" style="background: var(--bg-input); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-                                <div class="checkbox-group"><input type="checkbox"> Poinformowano o przyczynie</div>
-                                <div class="checkbox-group"><input type="checkbox"> Poinformowano o prawie do adwokata</div>
-                                <div class="checkbox-group"><input type="checkbox"> Zatrzymany żąda kontaktu z bliskimi</div>
-                            </div>
-                            <div class="form-group"><label>Podstawa Prawna i Faktyczna Zatrzymania (Szczegółowy opis)</label><textarea class="d-reason" rows="6" required placeholder="Dokładny opis popełnionego przestępstwa, zachowania sprawcy..."></textarea></div>
-                            <div class="form-group"><label>Spis Rzeczy Oddanych do Depozytu</label><textarea class="d-items" rows="3" placeholder="Portfel, telefon komórkowy (marka), klucze..."></textarea></div>
-                            <div class="form-group"><label>Decyzja o osadzeniu</label><select><option>Osadzono w PDOZ</option><option>Przekazano do dyspozycji prokuratora</option><option>Zwolniono po wykonaniu czynności</option></select></div>
-                            <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-file-signature"></i> AUTORYZUJ I PRZEKAŻ DO ARCHIWUM</button>
+                            <div class="form-group"><label>Podstawa Prawna i Faktyczna Zatrzymania</label><textarea class="doc-reason" rows="6" required placeholder="Opisz powód zatrzymania..."></textarea></div>
+                            <div class="form-group"><label>Decyzja po zatrzymaniu</label><select><option>Osadzenie w PDOZ</option><option>Przekazanie do dyspozycji Prokuratora</option><option>Zwolnienie</option></select></div>
+                            <button type="submit" class="btn-action"><i class="fa-solid fa-signature"></i> AUTORYZUJ PROTOKÓŁ</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- 2. MANDAT KARNY -->
+                <!-- 2. PRZESZUKANIE -->
+                <div id="view-f-przeszukanie" class="viewport">
+                    <div class="card">
+                        <div class="card-header"><i class="fa-solid fa-magnifying-glass-plus"></i> PROTOKÓŁ PRZESZUKANIA / WYDANIA RZECZY</div>
+                        <form onsubmit="submitDoc(event, 'PROTOKÓŁ PRZESZUKANIA')">
+                            <div class="grid-2">
+                                <div class="form-group"><label>Przeszukiwana Osoba / Miejsce / Pojazd</label><input type="text" class="doc-subject" required></div>
+                                <div class="form-group"><label>Cel Przeszukania</label><input type="text" required placeholder="np. Poszukiwanie narzędzia przestępstwa"></div>
+                            </div>
+                            <div class="form-group"><label>Wykaz Ujawnionych i Zabezpieczonych Rzeczy</label><textarea class="doc-reason" rows="6" required placeholder="1. Nóż składany, 2. Portfel, 3. Woreczek strunowy z zawartością suszu..."></textarea></div>
+                            <button type="submit" class="btn-action"><i class="fa-solid fa-signature"></i> AUTORYZUJ PROTOKÓŁ</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 3. MANDAT -->
                 <div id="view-f-mandat" class="viewport">
                     <div class="card">
                         <div class="card-header"><i class="fa-solid fa-money-bill-wave"></i> PROTOKÓŁ NAŁOŻENIA MANDATU KARNEGO</div>
-                        <form onsubmit="submitForm(event, 'MANDAT KARNY')">
+                        <form onsubmit="submitDoc(event, 'MANDAT KARNY')">
                             <div class="grid-2">
-                                <div class="form-group"><label>Sprawca Wykroczenia (Imię, Nazwisko, PESEL)</label><input type="text" class="d-subject" required></div>
-                                <div class="form-group"><label>Miejsce Ujawnienia Wykroczenia</label><input type="text" class="d-loc" required></div>
+                                <div class="form-group"><label>Sprawca Wykroczenia</label><input type="text" class="doc-subject" required></div>
+                                <div class="form-group"><label>Miejsce Ujawnienia</label><input type="text" class="doc-loc" required></div>
                             </div>
-                            <div class="grid-2">
-                                <div class="form-group"><label>Kwota Mandatu (PLN)</label><input type="number" id="mandate-fine" class="d-fine" required></div>
-                                <div class="form-group"><label>Ilość Punktów Karnych</label><input type="number" id="mandate-points" class="d-points" required></div>
+                            <div class="grid-3">
+                                <div class="form-group"><label>Kwota Mandatu (PLN)</label><input type="number" id="form-fine" required></div>
+                                <div class="form-group"><label>Punkty Karne</label><input type="number" id="form-points" required></div>
+                                <div class="form-group"><label>Typ Mandatu</label><select><option>Kredytowany</option><option>Gotówkowy</option><option>Zaoczny</option></select></div>
                             </div>
-                            <div class="form-group"><label>Rodzaj Mandatu</label><select><option>Gotówkowy</option><option>Kredytowany</option><option>Zaoczny</option></select></div>
-                            <div class="form-group"><label>Opis Czynu i Kwalifikacja Prawna</label><textarea id="mandate-desc" class="d-reason" rows="5" required placeholder="Wklej z taryfikatora lub opisz ręcznie..."></textarea></div>
-                            <div class="form-group"><label>Decyzja Sprawcy</label><select><option>Przyjął Mandat</option><option>Odmówił Przyjęcia (Kierowany Wniosek do Sądu)</option></select></div>
-                            <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-file-signature"></i> WYSTAW MANDAT</button>
+                            <div class="form-group"><label>Opis Wykroczenia</label><textarea id="form-desc" class="doc-reason" rows="5" required></textarea></div>
+                            <div class="form-group"><label>Decyzja Sprawcy</label><select class="doc-decision"><option>Przyjmuje Mandat</option><option>Odmawia Przyjęcia (Wniosek do Sądu)</option></select></div>
+                            <button type="submit" class="btn-action"><i class="fa-solid fa-signature"></i> WYSTAW MANDAT</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- 3. RAPORT ŚPB -->
+                <!-- 4. ŚPB -->
                 <div id="view-f-spb" class="viewport">
                     <div class="card">
-                        <div class="card-header"><i class="fa-solid fa-shield-halved"></i> RAPORT UŻYCIA ŚRODKÓW PRZYMUSU BEZPOŚREDNIEGO</div>
-                        <form onsubmit="submitForm(event, 'RAPORT ŚPB')">
-                            <div class="grid-3">
-                                <div class="form-group"><label>Data</label><input type="date" class="d-date" required></div>
-                                <div class="form-group"><label>Godzina</label><input type="time" class="d-time" required></div>
-                                <div class="form-group"><label>Miejsce Interwencji</label><input type="text" class="d-loc" required></div>
+                        <div class="card-header"><i class="fa-solid fa-shield-halved"></i> RAPORT Z UŻYCIA ŚRODKÓW PRZYMUSU BEZPOŚREDNIEGO</div>
+                        <form onsubmit="submitDoc(event, 'RAPORT ŚPB')">
+                            <div class="grid-2">
+                                <div class="form-group"><label>Wobec kogo użyto ŚPB</label><input type="text" class="doc-subject" required></div>
+                                <div class="form-group"><label>Miejsce Zdarzenia</label><input type="text" class="doc-loc" required></div>
                             </div>
-                            <div class="form-group"><label>Wobec kogo użyto ŚPB (Dane lub Rysopis)</label><input type="text" class="d-subject" required></div>
-                            <div class="form-group"><label>Zastosowane Środki (Zaznacz)</label>
-                                <div class="grid-4" style="background: var(--bg-input); padding: 15px; border-radius: 6px;">
-                                    <div class="checkbox-group"><input type="checkbox"> Siła Fizyczna</div>
-                                    <div class="checkbox-group"><input type="checkbox"> Kajdanki</div>
-                                    <div class="checkbox-group"><input type="checkbox"> Pałka</div>
-                                    <div class="checkbox-group"><input type="checkbox"> Gaz RMG</div>
-                                    <div class="checkbox-group"><input type="checkbox"> Taser</div>
-                                    <div class="checkbox-group"><input type="checkbox"> Broń Palna</div>
-                                </div>
+                            <div style="font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">ZASTOSOWANE ŚRODKI (Zaznacz odpowiednie)</div>
+                            <div class="grid-4" style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 15px;">
+                                <div class="checkbox-group"><input type="checkbox"> Siła Fizyczna</div>
+                                <div class="checkbox-group"><input type="checkbox"> Kajdanki</div>
+                                <div class="checkbox-group"><input type="checkbox"> Pałka Służbowa</div>
+                                <div class="checkbox-group"><input type="checkbox"> Gaz Pieprzowy</div>
+                                <div class="checkbox-group"><input type="checkbox"> Taser</div>
+                                <div class="checkbox-group"><input type="checkbox"> Broń Palna</div>
                             </div>
-                            <div class="form-group"><label>Czy ostrzeżono przed użyciem?</label><select><option>TAK - "Stój, Policja!"</option><option>NIE - Odstąpiono z uwagi na zagrożenie życia</option></select></div>
-                            <div class="form-group"><label>Szczegółowy opis zachowania agresora i przebiegu użycia ŚPB</label><textarea class="d-reason" rows="8" required placeholder="Podejrzany stawiał bierny/czynny opór..."></textarea></div>
-                            <div class="form-group"><label>Skutki Użycia (Obrażenia, Pomoc Medyczna)</label><textarea rows="3" placeholder="Udzielono pierwszej pomocy przedmedycznej..."></textarea></div>
-                            <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-file-signature"></i> ZATWIERDŹ RAPORT ŚPB</button>
+                            <div class="form-group"><label>Szczegółowy opis przebiegu interwencji i zachowania osoby</label><textarea class="doc-reason" rows="8" required></textarea></div>
+                            <div class="form-group"><label>Skutki użycia (Obrażenia, pomoc medyczna)</label><textarea rows="3" required></textarea></div>
+                            <button type="submit" class="btn-action"><i class="fa-solid fa-signature"></i> ZATWIERDŹ RAPORT</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- 4. NOTATKA -->
+                <!-- 5. NOTATKA -->
                 <div id="view-f-notatka" class="viewport">
                     <div class="card">
-                        <div class="card-header"><i class="fa-solid fa-file-lines"></i> NOTATKA SŁUŻBOWA / URZĘDOWA</div>
-                        <form onsubmit="submitForm(event, 'NOTATKA SŁUŻBOWA')">
-                            <div class="form-group"><label>Temat / Dotyczy Zdarzenia</label><input type="text" class="d-subject" required placeholder="np. Interwencja domowa ul. Polna 4"></div>
-                            <div class="form-group"><label>Uczestniczące Patrole / Wsparcie</label><input type="text" placeholder="np. ADAM-10, Zespół Ratownictwa Medycznego"></div>
-                            <div class="form-group"><label>Treść Notatki</label><textarea class="d-reason" rows="10" required placeholder="W dniu... o godzinie... udałem się na interwencję..."></textarea></div>
-                            <button type="submit" class="btn-action" style="width: 100%;"><i class="fa-solid fa-file-signature"></i> ZŁÓŻ NOTATKĘ</button>
+                        <div class="card-header"><i class="fa-solid fa-file-signature"></i> NOTATKA SŁUŻBOWA</div>
+                        <form onsubmit="submitDoc(event, 'NOTATKA SŁUŻBOWA')">
+                            <div class="form-group"><label>Dotyczy Sprawy / Zdarzenia</label><input type="text" class="doc-subject" required></div>
+                            <div class="form-group"><label>Treść Notatki</label><textarea class="doc-reason" rows="10" required placeholder="Opisz szczegółowo przebieg interwencji..."></textarea></div>
+                            <button type="submit" class="btn-action"><i class="fa-solid fa-signature"></i> ZŁÓŻ NOTATKĘ W ARCHIWUM</button>
                         </form>
                     </div>
                 </div>
@@ -474,7 +545,7 @@
                 <!-- VIEW: ARCHIWUM -->
                 <div id="view-archiwum" class="viewport">
                     <div class="card">
-                        <div class="card-header"><i class="fa-solid fa-server"></i> REJESTR CENTRALNY DOKUMENTACJI (LIVE)</div>
+                        <div class="card-header"><i class="fa-solid fa-server"></i> REJESTR DOKUMENTÓW (LIVE)</div>
                         <div id="archive-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
                     </div>
                 </div>
@@ -485,7 +556,7 @@
 
 <script>
     // ==========================================
-    // 1. OAUTH2 DISCORD WERYFIKACJA
+    // 1. DISCORD OAUTH2 (TWARDA WERYFIKACJA)
     // ==========================================
     const DISCORD_CLIENT_ID = '1526962966975610991';
     const GUILD_ID = '1527014315381751928';
@@ -509,20 +580,22 @@
 
         try {
             const userRes = await fetch('https://discord.com/api/users/@me', { headers: { Authorization: `Bearer ${token}` } });
-            if(!userRes.ok) throw new Error("Błąd sesji Discord. Zaloguj się ponownie.");
+            if(!userRes.ok) throw new Error("Wygasła sesja. Zaloguj się ponownie.");
             currentUser = await userRes.json();
 
             const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, { headers: { Authorization: `Bearer ${token}` } });
-            if(!memberRes.ok) throw new Error("Brak dostępu. Nie jesteś na wymaganym serwerze Discord.");
+            if(!memberRes.ok) throw new Error("Brak dostępu do serwera KSP.");
             
             const memberData = await memberRes.json();
-            if(!memberData.roles.includes(ROLE_ID)) throw new Error("Odmowa dostępu: Brak wymaganej Roli Służbowej na serwerze.");
+            if(!memberData.roles.includes(ROLE_ID)) throw new Error("Odmowa dostępu: Brak wymaganej Roli Służbowej.");
 
-            // Success
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('app-container').style.display = 'flex';
-            document.getElementById('user-display').innerText = `Zalogowano: ${currentUser.username}`;
+            document.getElementById('user-display').innerText = `${currentUser.username}`;
             
+            // Wpisz automatycznie imię policjanta jeśli trzeba (później do formularzy)
+            if(document.getElementById('duty-name')) document.getElementById('duty-name').value = currentUser.username;
+
             initSystem();
         } catch (e) {
             localStorage.removeItem('ksp_token');
@@ -536,7 +609,7 @@
     // ==========================================
     // 2. FIREBASE REALTIME DB
     // ==========================================
-    // !!! WAŻNE !!! WKLEJ TUTAJ SWOJE KLUCZE Z FIREBASE CONSOLE:
+    // !!! W TYM MIEJSCU WKLEJ SWOJE DANE Z FIREBASE CONSOLE !!!
     const firebaseConfig = {
         apiKey: "TWOJ_API_KEY",
         authDomain: "twoj-projekt.firebaseapp.com",
@@ -551,16 +624,11 @@
     const db = firebase.database();
 
     // ==========================================
-    // 3. LOGIKA APLIKACJI
+    // 3. CORE LOGIC
     // ==========================================
     function initSystem() {
-        // Zegar
-        setInterval(() => {
-            const d = new Date();
-            document.getElementById('sys-clock').innerText = d.toLocaleTimeString('pl-PL');
-        }, 1000);
+        setInterval(() => { document.getElementById('sys-clock').innerText = new Date().toLocaleTimeString('pl-PL'); }, 1000);
 
-        // Nawigacja
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -575,21 +643,46 @@
         listenToDatabase();
     }
 
-    // --- SŁUŻBA (START/STOP) ---
+    // Dodawanie do globalnego dziennika (Live Feed)
+    function addFeed(msg, type) {
+        db.ref('globalFeed/').push({ msg, type, time: new Date().toLocaleTimeString('pl-PL') });
+    }
+
+    // --- ZBROJOWNIA ---
+    document.getElementById('gear-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = {
+            officer: document.getElementById('gear-officer').value,
+            radio: document.getElementById('gear-radio').value || '-',
+            bodycam: document.getElementById('gear-bodycam').value || '-',
+            gun: document.getElementById('gear-gun').value || '-',
+            taser: document.getElementById('gear-taser').value || '-'
+        };
+        db.ref('armory/' + currentUser.id).set(data);
+        addFeed(`${data.officer} pobrał wyposażenie.`, 'bg-primary');
+        alert("Pobrano sprzęt. Pamiętaj o zdaniu go po służbie!");
+    });
+
+    function returnGear(id) {
+        db.ref('armory/' + id).remove();
+        addFeed(`Funkcjonariusz zdał wyposażenie do zbrojowni.`, 'bg-primary');
+    }
+
+    // --- SŁUŻBA (PATROL) ---
     let activeDutyData = null;
     let dutyInt = null;
 
-    function startDuty() {
-        const name = document.getElementById('duty-name').value;
-        const badge = document.getElementById('duty-badge').value;
-        const callsign = document.getElementById('duty-callsign').value;
-        const car = document.getElementById('duty-car').value;
-        
-        if(!name || !badge || !callsign) return alert("Wypełnij wymagane dane startowe!");
-
-        activeDutyData = { name, badge, callsign, car, startTime: Date.now() };
+    document.getElementById('duty-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        activeDutyData = {
+            name: document.getElementById('duty-name').value,
+            badge: document.getElementById('duty-badge').value,
+            callsign: document.getElementById('duty-callsign').value,
+            car: document.getElementById('duty-car').value,
+            startTime: Date.now()
+        };
         db.ref('activePatrols/' + currentUser.id).set(activeDutyData);
-        addFeed(`Jednostka ${callsign} (${name}) zgłosiła status: W PATROLU.`, 'bg-success');
+        addFeed(`Patrol ${activeDutyData.callsign} (${activeDutyData.name}) wyjechał w teren.`, 'bg-success');
 
         document.getElementById('duty-form').style.display = 'none';
         document.getElementById('duty-active').style.display = 'block';
@@ -601,23 +694,19 @@
             const s = String(diff%60).padStart(2,'0');
             document.getElementById('duty-timer').innerText = `${h}:${m}:${s}`;
         }, 1000);
-    }
+    });
 
     function stopDuty() {
         if(!activeDutyData) return;
         clearInterval(dutyInt);
-        const duration = Math.floor((Date.now() - activeDutyData.startTime) / 1000);
+        const durationSecs = Math.floor((Date.now() - activeDutyData.startTime) / 1000);
         
-        // Zapisz sesję do historii bazy (do kalkulacji zsumowanej)
         db.ref('dutyHistory/').push({
-            name: activeDutyData.name,
-            badge: activeDutyData.badge,
-            durationSecs: duration,
-            date: new Date().toLocaleDateString()
+            name: activeDutyData.name, badge: activeDutyData.badge, durationSecs, date: new Date().toLocaleDateString()
         });
 
         db.ref('activePatrols/' + currentUser.id).remove();
-        addFeed(`Jednostka ${activeDutyData.callsign} zakończyła służbę.`, 'bg-danger');
+        addFeed(`Patrol ${activeDutyData.callsign} zakończył działania.`, 'bg-danger');
 
         document.getElementById('duty-form').style.display = 'block';
         document.getElementById('duty-active').style.display = 'none';
@@ -625,68 +714,77 @@
         activeDutyData = null;
     }
 
-    // --- KSIP / CEPIK ---
+    // --- BAZY DANYCH (KSIP / CEPIK / BRON) ---
     document.getElementById('ksip-form').addEventListener('submit', (e) => {
         e.preventDefault();
         db.ref('ksip/').push({
-            name: document.getElementById('ksip-name').value,
-            pesel: document.getElementById('ksip-pesel').value,
-            status: document.getElementById('ksip-status').value,
-            threat: document.getElementById('ksip-threat').value
+            name: document.getElementById('ksip-name').value, pesel: document.getElementById('ksip-pesel').value,
+            status: document.getElementById('ksip-status').value, threat: document.getElementById('ksip-threat').value
         });
-        addFeed(`Dodano wpis KSIP dla: ${document.getElementById('ksip-name').value}`, 'bg-warning');
-        e.target.reset(); alert('Zapisano w KSIP');
+        addFeed(`Wpisano do KSIP: ${document.getElementById('ksip-name').value}`, 'bg-warning');
+        e.target.reset(); alert('Zapisano w bazie KSIP');
     });
 
     document.getElementById('cepik-form').addEventListener('submit', (e) => {
         e.preventDefault();
         db.ref('cepik/').push({
-            plate: document.getElementById('cepik-plate').value.toUpperCase(),
-            model: document.getElementById('cepik-model').value,
-            owner: document.getElementById('cepik-owner').value,
-            status: document.getElementById('cepik-stolen').value
+            plate: document.getElementById('cepik-plate').value.toUpperCase(), model: document.getElementById('cepik-model').value,
+            owner: document.getElementById('cepik-owner').value, status: document.getElementById('cepik-stolen').value
         });
-        addFeed(`Dodano pojazd CEPiK: ${document.getElementById('cepik-plate').value}`, 'bg-primary');
-        e.target.reset(); alert('Zapisano w CEPiK');
+        addFeed(`Zarejestrowano pojazd CEPiK: ${document.getElementById('cepik-plate').value}`, 'bg-primary');
+        e.target.reset(); alert('Zapisano w bazie CEPiK');
     });
 
-    // --- FORMULARZE DOKUMENTÓW (ZBIORCZE) ---
-    function submitForm(e, docType) {
+    document.getElementById('weapon-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        db.ref('weapons/').push({
+            serial: document.getElementById('weap-serial').value, type: document.getElementById('weap-type').value,
+            owner: document.getElementById('weap-owner').value, status: document.getElementById('weap-status').value
+        });
+        addFeed(`Wprowadzono broń SN:${document.getElementById('weap-serial').value}`, 'bg-danger');
+        e.target.reset(); alert('Broń zarejestrowana');
+    });
+
+    // --- FORMULARZE PROTOKOŁÓW ---
+    function submitDoc(e, docType) {
         e.preventDefault();
         const form = e.target;
         const data = {
             type: docType,
-            officer: currentUser.username,
-            subject: form.querySelector('.d-subject') ? form.querySelector('.d-subject').value : 'N/D',
-            reason: form.querySelector('.d-reason') ? form.querySelector('.d-reason').value : 'Brak opisu',
+            officer: currentUser ? currentUser.username : "Funkcjonariusz",
+            subject: form.querySelector('.doc-subject') ? form.querySelector('.doc-subject').value : '-',
+            reason: form.querySelector('.doc-reason') ? form.querySelector('.doc-reason').value : '-',
             timestamp: new Date().toLocaleString(),
             signature: "KSP/" + Math.floor(Math.random()*99999) + "/26"
         };
+        // Dopisz decision/kwote z mandatu jeśli są
+        if(form.querySelector('.doc-decision')) data.decision = form.querySelector('.doc-decision').value;
 
         db.ref('documents/').push(data);
-        addFeed(`Wygenerowano: ${docType} [${data.signature}]`, 'bg-primary');
-        form.reset();
-        alert('Dokument zarchiwizowany w chmurze.');
+        addFeed(`Wystawiono dokument: ${docType} [${data.signature}]`, 'bg-success');
+        form.reset(); alert('Dokument zarchiwizowany w systemie centralnym.');
     }
 
     // --- TARYFIKATOR ---
     const TARIFF_DATA = [
-        { c: "Prędkość", t: "Przekroczenie do 10 km/h", f: 50, p: 1 },
-        { c: "Prędkość", t: "Przekroczenie o 21-25 km/h", f: 300, p: 5 },
-        { c: "Prędkość", t: "Przekroczenie o 41-50 km/h", f: 1000, p: 11 },
-        { c: "Prędkość", t: "Przekroczenie o ponad 70 km/h", f: 2500, p: 15 },
+        { c: "Prędkość", t: "Przekroczenie prędkości do 10 km/h", f: 50, p: 1 },
+        { c: "Prędkość", t: "Przekroczenie prędkości o 11-15 km/h", f: 100, p: 2 },
+        { c: "Prędkość", t: "Przekroczenie prędkości o 16-20 km/h", f: 200, p: 3 },
+        { c: "Prędkość", t: "Przekroczenie prędkości o 21-25 km/h", f: 300, p: 5 },
+        { c: "Prędkość", t: "Przekroczenie prędkości o 26-30 km/h", f: 400, p: 7 },
+        { c: "Prędkość", t: "Przekroczenie prędkości o 31-40 km/h", f: 800, p: 9 },
+        { c: "Prędkość", t: "Przekroczenie prędkości o 41-50 km/h", f: 1000, p: 11 },
+        { c: "Ruch", t: "Niestosowanie się do znaku B-2 (zakaz wjazdu)", f: 500, p: 8 },
         { c: "Ruch", t: "Przejazd na czerwonym świetle", f: 500, p: 15 },
-        { c: "Ruch", t: "Brak zapiętych pasów", f: 100, p: 5 },
-        { c: "Ruch", t: "Używanie telefonu podczas jazdy", f: 500, p: 12 },
-        { c: "Ruch", t: "Stworzenie zagrożenia bezpieczeństwa (kolizja)", f: 1500, p: 10 },
-        { c: "Parkowanie", t: "Parkowanie na zakazie", f: 100, p: 1 },
+        { c: "Ruch", t: "Korzystanie z telefonu podczas jazdy", f: 500, p: 12 },
+        { c: "Ruch", t: "Brak zapiętych pasów bezpieczeństwa", f: 100, p: 5 },
+        { c: "Parkowanie", t: "Zatrzymanie pojazdu na przejściu dla pieszych", f: 300, p: 5 },
         { c: "Parkowanie", t: "Parkowanie na miejscu dla niepełnosprawnych", f: 800, p: 6 },
-        { c: "Porządkowe", t: "Zakłócanie ładu i porządku publicznego", f: 500, p: 0 },
-        { c: "Porządkowe", t: "Spożywanie alkoholu w miejscu objętym zakazem", f: 100, p: 0 },
-        { c: "Porządkowe", t: "Nieobyczajny wybryk (Załatwianie potrzeb fizjol.)", f: 150, p: 0 },
-        { c: "Przestępstwa", t: "Kierowanie po użyciu alkoholu (0.2 - 0.5)", f: 2500, p: 15 },
-        { c: "Przestępstwa", t: "Znieważenie funkcjonariusza", f: 3000, p: 0 },
-        { c: "Przestępstwa", t: "Ucieczka przed kontrolą", f: 5000, p: 15 }
+        { c: "Porządek", t: "Zakłócanie ciszy nocnej i porządku publicznego", f: 500, p: 0 },
+        { c: "Porządek", t: "Spożywanie alkoholu w miejscu zabronionym", f: 100, p: 0 },
+        { c: "Przestępstwo", t: "Kierowanie pojazdem w stanie nietrzeźwości", f: 2500, p: 15 },
+        { c: "Przestępstwo", t: "Niewskazanie sprawcy wykroczenia", f: 2000, p: 0 },
+        { c: "Przestępstwo", t: "Naruszenie nietykalności funkcjonariusza", f: 5000, p: 0 }
     ];
 
     let selectedTariff = [];
@@ -696,8 +794,8 @@
         TARIFF_DATA.forEach((item, index) => {
             const el = document.createElement('div');
             el.className = 'tariff-item';
-            el.innerHTML = `<div><div style="font-size:11px;color:var(--text-muted);">${item.c}</div><div style="font-weight:600;">${item.t}</div></div>
-                            <div style="text-align:right;"><div style="color:var(--primary);font-weight:700;">${item.f} PLN</div><div style="color:var(--danger);font-size:11px;">${item.p} pkt</div></div>`;
+            el.innerHTML = `<div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">${item.c}</div><div style="font-weight:600;font-size:13px;">${item.t}</div></div>
+                            <div style="text-align:right;"><div style="color:var(--primary-blue);font-weight:800;">${item.f} PLN</div><div style="color:var(--danger);font-size:11px;font-weight:700;">${item.p} pkt</div></div>`;
             el.onclick = () => {
                 el.classList.toggle('selected');
                 if(selectedTariff.includes(index)) selectedTariff = selectedTariff.filter(i => i !== index);
@@ -716,14 +814,14 @@
     }
 
     function transferToMandate() {
-        if(selectedTariff.length === 0) return alert("Wybierz pozycje z taryfikatora!");
+        if(selectedTariff.length === 0) return alert("Wybierz pozycje!");
         let fine = 0, pts = 0, desc = "";
         selectedTariff.forEach(i => { fine += TARIFF_DATA[i].f; pts += TARIFF_DATA[i].p; desc += "- " + TARIFF_DATA[i].t + "\n"; });
         
         document.querySelector('.nav-btn[data-target="f-mandat"]').click();
-        document.getElementById('mandate-fine').value = fine;
-        document.getElementById('mandate-points').value = pts;
-        document.getElementById('mandate-desc').value = "Wykroczenia:\n" + desc;
+        document.getElementById('form-fine').value = fine;
+        document.getElementById('form-points').value = pts;
+        document.getElementById('form-desc').value = "Stwierdzono wykroczenia:\n" + desc;
     }
     function resetTariff() { selectedTariff = []; initTariff(); calcTariff(); }
 
@@ -735,87 +833,12 @@
         });
     }
 
-    // --- LIVE DB LISTENERS (DLA WSZYSTKICH) ---
-    function addFeed(msg, badge) {
-        db.ref('globalFeed/').push({ msg, badge, time: new Date().toLocaleTimeString() });
-    }
-
-    function listenToDatabase() {
-        // FEED DASHBOARD
-        db.ref('globalFeed/').on('value', snap => {
-            const feed = document.getElementById('live-feed');
-            feed.innerHTML = '';
-            const arr = [];
-            snap.forEach(s => arr.push(s.val()));
-            arr.reverse().slice(0, 20).forEach(v => {
-                feed.innerHTML += `<div class="feed-item"><div class="feed-header"><span><span class="badge ${v.badge}">SYSTEM</span></span><span>${v.time}</span></div><div class="feed-desc">${v.msg}</div></div>`;
-            });
-        });
-
-        // AKTYWNE PATROLE
-        db.ref('activePatrols/').on('value', snap => {
-            const tbody = document.getElementById('active-units-table');
-            tbody.innerHTML = '';
-            let count = 0;
-            snap.forEach(s => {
-                count++;
-                const v = s.val();
-                tbody.innerHTML += `<tr><td><span class="badge bg-success">${v.callsign}</span></td><td>${v.name}</td><td>${v.car}</td></tr>`;
-            });
-            document.getElementById('stat-patrols').innerText = count;
-        });
-
-        // ARCHIWUM DOKUMENTÓW
-        db.ref('documents/').on('value', snap => {
-            const list = document.getElementById('archive-list');
-            list.innerHTML = '';
-            let count = 0;
-            const arr = [];
-            snap.forEach(s => { count++; arr.push(s.val()); });
-            arr.reverse().forEach(v => {
-                list.innerHTML += `<div style="background: var(--bg-input); padding: 15px; border-radius: 6px; border-left: 4px solid var(--primary);">
-                    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-bottom:10px;"><span>${v.timestamp}</span><span>${v.signature}</span></div>
-                    <div style="font-weight:700; color:var(--text-main); font-size:15px; margin-bottom:5px;">${v.type}</div>
-                    <div style="font-size:13px;"><b>Dotyczy:</b> ${v.subject}</div>
-                    <div style="font-size:13px; margin: 10px 0; color: var(--text-muted); line-height: 1.5;">${v.reason}</div>
-                    <div style="font-size:11px; color: var(--primary); text-align:right;">Wystawił: ${v.officer}</div>
-                </div>`;
-            });
-            document.getElementById('stat-docs').innerText = count;
-        });
-
-        // GRUPOWANIE GODZIN PO ODZNACE I NAZWISKU
-        db.ref('dutyHistory/').on('value', snap => {
-            const aggregated = {};
-            snap.forEach(s => {
-                const v = s.val();
-                const key = v.badge + "_" + v.name; // Unikalny klucz grupujący
-                if(!aggregated[key]) aggregated[key] = { name: v.name, badge: v.badge, totalSecs: 0, patrols: 0 };
-                aggregated[key].totalSecs += v.durationSecs;
-                aggregated[key].patrols += 1;
-            });
-            
-            const tbody = document.getElementById('aggregated-hours-table');
-            tbody.innerHTML = '';
-            Object.values(aggregated).forEach(a => {
-                const h = String(Math.floor(a.totalSecs/3600)).padStart(2,'0');
-                const m = String(Math.floor((a.totalSecs%3600)/60)).padStart(2,'0');
-                tbody.innerHTML += `<tr><td><span class="badge bg-primary">${a.badge}</span></td><td><b>${a.name}</b></td><td style="color:var(--success); font-family:monospace; font-size:14px;">${h}h ${m}m</td><td>${a.patrols} zmian</td></tr>`;
-            });
-        });
-
-        // STATYSTYKI BAZ
-        db.ref('ksip/').on('value', snap => document.getElementById('stat-ksip').innerText = snap.numChildren());
-        db.ref('cepik/').on('value', snap => document.getElementById('stat-cepik').innerText = snap.numChildren());
-    }
-
     // --- WYSZUKIWARKI ---
     function searchKSIP() {
         const q = document.getElementById('ksip-search').value.toLowerCase();
         const tbody = document.getElementById('ksip-tbody');
         tbody.innerHTML = '';
         if(q.length < 2) return;
-        
         db.ref('ksip/').once('value', snap => {
             snap.forEach(s => {
                 const v = s.val();
@@ -832,7 +855,6 @@
         const tbody = document.getElementById('cepik-tbody');
         tbody.innerHTML = '';
         if(q.length < 2) return;
-        
         db.ref('cepik/').once('value', snap => {
             snap.forEach(s => {
                 const v = s.val();
@@ -844,7 +866,105 @@
         });
     }
 
-    // INIT OAUTH CHECK
+    function searchWeapon() {
+        const q = document.getElementById('weap-search').value.toLowerCase();
+        const tbody = document.getElementById('weap-tbody');
+        tbody.innerHTML = '';
+        if(q.length < 2) return;
+        db.ref('weapons/').once('value', snap => {
+            snap.forEach(s => {
+                const v = s.val();
+                if(v.serial.toLowerCase().includes(q)) {
+                    let badge = v.status === 'LEGALNA' ? 'bg-success' : 'bg-danger';
+                    tbody.innerHTML += `<tr><td><b>${v.serial}</b></td><td>${v.owner}</td><td><span class="badge ${badge}">${v.status}</span></td></tr>`;
+                }
+            });
+        });
+    }
+
+    // --- SYNCHRONIZACJA BAZY NA ŻYWO (Pobieranie dla wszystkich) ---
+    function listenToDatabase() {
+        // FEED DASHBOARD
+        db.ref('globalFeed/').on('value', snap => {
+            const feed = document.getElementById('live-feed');
+            feed.innerHTML = '';
+            const arr = [];
+            snap.forEach(s => arr.push(s.val()));
+            arr.reverse().slice(0, 20).forEach(v => {
+                feed.innerHTML += `<div class="feed-item"><div class="feed-header"><span><span class="badge ${v.type}">SYSTEM</span></span><span>${v.time}</span></div><div class="feed-desc">${v.msg}</div></div>`;
+            });
+        });
+
+        // AKTYWNE PATROLE
+        db.ref('activePatrols/').on('value', snap => {
+            const tbody = document.getElementById('active-units-table');
+            tbody.innerHTML = '';
+            let count = 0;
+            snap.forEach(s => { count++; const v = s.val(); tbody.innerHTML += `<tr><td><span class="badge bg-success">${v.callsign}</span></td><td>${v.name}</td><td>${v.car}</td></tr>`; });
+            document.getElementById('stat-patrols').innerText = count;
+        });
+
+        // ZBROJOWNIA
+        db.ref('armory/').on('value', snap => {
+            const tbody = document.getElementById('gear-table-body');
+            tbody.innerHTML = '';
+            let count = 0;
+            snap.forEach(s => {
+                count++; const v = s.val(); const key = s.key;
+                const isMe = (currentUser && key === currentUser.id);
+                tbody.innerHTML += `<tr><td><b>${v.officer}</b></td><td>R: ${v.radio} <br> BC: ${v.bodycam}</td><td>${v.gun}</td>
+                <td>${isMe ? `<button class="btn-action btn-danger" style="padding: 6px 12px; font-size:11px;" onclick="returnGear('${key}')">ZDAJ</button>` : ''}</td></tr>`;
+            });
+            document.getElementById('stat-gear').innerText = count;
+        });
+
+        // ARCHIWUM DOKUMENTÓW
+        db.ref('documents/').on('value', snap => {
+            const list = document.getElementById('archive-list');
+            list.innerHTML = '';
+            let count = 0;
+            const arr = [];
+            snap.forEach(s => { count++; arr.push(s.val()); });
+            arr.reverse().forEach(v => {
+                list.innerHTML += `<div class="card" style="margin-bottom:15px; border-left: 4px solid var(--primary-blue);">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:10px; font-weight:700;"><span>${v.timestamp}</span><span>${v.signature}</span></div>
+                    <div style="font-weight:800; font-size:15px; margin-bottom:5px; color:var(--bg-sidebar); text-transform:uppercase;">${v.type}</div>
+                    <div style="font-size:13px; margin-bottom: 8px;"><b>Dotyczy:</b> ${v.subject}</div>
+                    <div style="font-size:13px; color: var(--text-normal); line-height: 1.5; background: #f8fafc; padding: 10px; border-radius: 6px;">${v.reason}</div>
+                    ${v.decision ? `<div style="font-size:12px; margin-top:8px; color:var(--danger); font-weight:700;">Decyzja: ${v.decision}</div>` : ''}
+                    <div style="font-size:11px; color: var(--primary-blue); text-align:right; margin-top:10px; font-weight:700;">Wystawił: ${v.officer}</div>
+                </div>`;
+            });
+            document.getElementById('stat-docs').innerText = count;
+        });
+
+        // ZSUMOWANE GODZINY SŁUŻBY
+        db.ref('dutyHistory/').on('value', snap => {
+            const aggregated = {};
+            snap.forEach(s => {
+                const v = s.val();
+                const key = v.badge + "_" + v.name;
+                if(!aggregated[key]) aggregated[key] = { name: v.name, badge: v.badge, totalSecs: 0, patrols: 0 };
+                aggregated[key].totalSecs += v.durationSecs;
+                aggregated[key].patrols += 1;
+            });
+            
+            const tbody = document.getElementById('aggregated-hours-table');
+            tbody.innerHTML = '';
+            Object.values(aggregated).forEach(a => {
+                const h = String(Math.floor(a.totalSecs/3600)).padStart(2,'0');
+                const m = String(Math.floor((a.totalSecs%3600)/60)).padStart(2,'0');
+                tbody.innerHTML += `<tr><td><span class="badge bg-primary">${a.badge}</span></td><td><b>${a.name}</b></td>
+                <td style="color:var(--success); font-family:monospace; font-size:16px; font-weight:700;">${h}h ${m}m</td>
+                <td><span class="badge bg-outline">${a.patrols} zmian</span></td></tr>`;
+            });
+        });
+
+        db.ref('ksip/').on('value', snap => document.getElementById('stat-ksip').innerText = snap.numChildren());
+        db.ref('cepik/').on('value', snap => document.getElementById('stat-cepik').innerText = snap.numChildren());
+    }
+
+    // INIT
     checkAuth();
 </script>
 </body>
