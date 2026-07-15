@@ -4,36 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KSP - Cyfrowy Terminal Operacyjny v7.0</title>
-    <!-- Ikony i Czcionki -->
+    
+    <!-- Zewnętrzne biblioteki: Ikony i Czcionki -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
+        /* --- ZMIENNE GLOBALNE & PALETA BARW (MILITARY TACTICAL DARK) --- */
         :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --bg-input: #f8fafc;
-            --police-blue: #0f172a;
-            --police-blue-light: #1e293b;
-            --accent-blue: #2563eb;
-            --accent-blue-hover: #1d4ed8;
-            --accent-blue-light: #eff6ff;
-            --border: #e2e8f0;
-            --text-dark: #0f172a;
-            --text-normal: #475569;
-            --text-muted: #94a3b8;
+            --bg-main: #0b0f19;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --police-blue: #1e3a8a;
+            --police-blue-hover: #1d4ed8;
+            --police-blue-dark: #1e293b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --border: #374151;
+            --text-dark: #f9fafb;
+            --text-normal: #d1d5db;
+            --text-muted: #9ca3af;
             --success: #10b981;
+            --warning: #f59e0b;
             --danger: #ef4444;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-            --discord-color: #5865F2;
-            --discord-color-hover: #4752C4;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
         }
 
+        /* --- PODSTAWOWY RESET --- */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) var(--bg-main);
+        }
+
+        /* Stylizacja scrollbara dla Webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
         }
 
         body {
@@ -45,371 +66,499 @@
             overflow: hidden;
         }
 
-        /* PANEL LOGOWANIA (ZABEZPIECZENIE DISCORD) */
+        /* --- EKRAN BLOKADY / AUTORYZACJA DISCORD --- */
         #auth-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--police-blue);
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
             z-index: 99999;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
         }
 
         .auth-card {
-            background: #1e293b;
-            padding: 40px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-card);
+            padding: 50px 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
             text-align: center;
-            width: 420px;
+            width: 460px;
             box-shadow: var(--shadow-lg);
+            position: relative;
         }
 
-        .btn-discord {
-            background-color: var(--discord-color);
-            color: white;
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+        }
+
+        .discord-btn {
+            background: #5865F2;
+            color: #ffffff;
             border: none;
-            width: 100%;
-            height: 50px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
+            padding: 14px 24px;
+            font-size: 13px;
+            font-weight: 800;
+            border-radius: 10px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 12px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+            transition: all 0.3s ease;
+            width: 100%;
+            justify-content: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
         }
 
-        .btn-discord:hover {
-            background-color: var(--discord-color-hover);
+        .discord-btn:hover {
+            background: #4752C4;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+            box-shadow: 0 6px 20px rgba(88, 101, 242, 0.6);
         }
 
-        .btn-discord:active {
-            transform: translateY(0);
-        }
-
+        /* --- GŁÓWNY UKŁAD APLIKACJI --- */
         #app-container {
-            display: flex;
+            display: none; /* Domyślnie ukryty do momentu autoryzacji */
             flex-direction: column;
             height: 100vh;
         }
 
-        /* HEADER */
+        /* --- NAGŁÓWEK --- */
         header {
-            height: 80px;
-            background: var(--police-blue);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            height: 85px;
+            background: var(--bg-card);
+            border-bottom: 2px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 24px;
-            z-index: 10;
-            color: #ffffff;
+            padding: 0 30px;
+            z-index: 100;
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-area img {
-            height: 45px;
-        }
-
-        .logo-text h1 {
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            color: #ffffff;
-        }
-
-        .logo-text span {
-            font-size: 10px;
-            color: var(--accent-blue);
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-
-        /* NAWIGACJA */
-        nav {
-            display: flex;
-            gap: 8px;
-        }
-
-        .nav-btn {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #cbd5e1;
-            padding: 10px 18px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-btn:hover {
-            color: #ffffff;
-            border-color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-btn.active {
-            color: #ffffff;
-            background: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-
-        .header-status {
+        .header-brand {
             display: flex;
             align-items: center;
             gap: 20px;
         }
 
-        /* Profil zalogowanego Discorda */
-        .discord-profile {
+        .header-brand img {
+            height: 50px;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .brand-text span {
+            font-size: 10px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+        /* --- NAWIGACJA GŁÓWNA --- */
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(31, 41, 55, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-normal);
+            padding: 12px 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.25s ease;
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.5px;
         }
 
-        .discord-avatar {
+        .nav-btn:hover {
+            color: #ffffff;
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-btn.active {
+            color: #ffffff;
+            background: var(--police-blue);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .header-profile {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(31, 41, 55, 0.5);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .profile-card img {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            border: 1px solid var(--accent-blue);
+            border: 2px solid var(--accent-blue);
         }
 
-        .discord-name {
-            font-size: 12px;
-            font-weight: bold;
-            color: #ffffff;
-        }
-
-        .system-time {
-            text-align: right;
-        }
-
-        .time-digits {
-            font-size: 16px;
-            font-family: 'JetBrains Mono', monospace;
-            color: #ffffff;
-            font-weight: bold;
-        }
-
-        .date-digits {
-            font-size: 10px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        /* MAIN WORKSPACE */
-        main {
-            flex-grow: 1;
-            padding: 24px;
-            overflow-y: auto;
+        .profile-info {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+        }
+
+        .profile-name {
+            font-size: 12px;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .profile-role {
+            font-size: 9px;
+            color: var(--accent-cyan);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* Zegar systemowy */
+        .system-clock {
+            text-align: right;
+            border-left: 2px solid var(--border);
+            padding-left: 25px;
+        }
+
+        .clock-time {
+            font-size: 18px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .clock-date {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* --- PRZESTRZEŃ ROBOCZA --- */
+        main {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: radial-gradient(circle at 50% 50%, #111827 0%, #070a13 100%);
         }
 
         .viewport {
             display: none;
-            animation: fadeIn 0.25s ease;
+            animation: renderIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .viewport.active {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+        @keyframes renderIn {
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* KARTY */
-        .cyber-card {
+        /* --- GENERATOR STATYSTYK --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-widget {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 24px;
-            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
             box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
         }
 
-        .cyber-card::before {
+        .stat-widget::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--accent-blue);
+            bottom: 0; left: 0; width: 100%; height: 3px;
+            background: var(--border);
+        }
+
+        .stat-widget.accented::after {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+        }
+
+        .stat-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-data h3 {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-data p {
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- KARTY TAKTYCZNE --- */
+        .tactical-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 30px;
+            position: relative;
         }
 
         .card-header-tactical {
             border-bottom: 1px solid var(--border);
-            padding-bottom: 16px;
-            margin-bottom: 20px;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .card-title-tactical {
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            color: var(--police-blue);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
             text-transform: uppercase;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .card-title-tactical i {
-            color: var(--accent-blue);
+            color: var(--accent-cyan);
+            font-size: 16px;
         }
 
-        /* STATS DASHBOARD */
-        .dashboard-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-box {
-            background: white;
-            border: 1px solid var(--border);
+        /* --- TABELE --- */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
             border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: var(--shadow);
-        }
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            background: var(--accent-blue-light);
-            color: var(--accent-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        .stat-info h4 {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .stat-info p {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--police-blue);
+            border: 1px solid var(--border);
         }
 
-        /* FORMULARZE */
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: rgba(17, 24, 39, 0.6);
+        }
+
+        th {
+            background: rgba(31, 41, 55, 0.8);
+            color: var(--text-dark);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+            font-size: 11px;
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-normal);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* --- FORMULARZE, INPUTY, SELEKTY --- */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
         @media (max-width: 1024px) {
-            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
-            .dashboard-row { grid-template-columns: repeat(2, 1fr); }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        .form-unit {
+        .form-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .form-unit label {
+        .form-group label {
             font-size: 11px;
-            color: var(--text-normal);
+            color: var(--text-muted);
             text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
 
         .input-tactical {
             background: var(--bg-input);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 16px;
-            color: var(--text-dark);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: #ffffff;
             font-size: 13px;
             font-weight: 500;
             outline: none;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
             width: 100%;
         }
 
         .input-tactical:focus {
             border-color: var(--accent-blue);
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            background: rgba(31, 41, 55, 0.9);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
         }
 
-        /* BUTTONS */
+        .input-tactical::placeholder {
+            color: rgba(156, 163, 175, 0.5);
+        }
+
+        /* --- PRZYCISKI OPERACYJNE --- */
         .btn-ops {
-            padding: 12px 24px;
+            padding: 14px 28px;
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-flex;
             align-items: center;
             gap: 10px;
             border: 1px solid var(--border);
-            background: #ffffff;
-            color: var(--text-dark);
+            background: var(--bg-input);
+            color: var(--text-normal);
+            letter-spacing: 1px;
         }
 
         .btn-ops:hover {
-            background: var(--bg-input);
+            background: rgba(55, 65, 81, 0.8);
             border-color: var(--text-muted);
+            color: #ffffff;
         }
 
         .btn-accent {
-            background: var(--accent-blue);
+            background: var(--police-blue);
             color: #ffffff;
             border-color: var(--accent-blue);
         }
 
         .btn-accent:hover {
-            background: var(--accent-blue-hover);
-            border-color: var(--accent-blue-hover);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            background: var(--police-blue-hover);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
         }
 
-        /* TIMELINE I LOGI */
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* --- KONSOLA LOGÓW SYSTEMOWYCH --- */
+        .terminal-log-box {
+            background: #030712;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #cbd5e1;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .log-line {
+            padding: 8px 0;
+            border-bottom: 1px dotted rgba(255,255,255,0.05);
+            display: flex;
+            gap: 15px;
+            line-height: 1.5;
+        }
+
+        .log-timestamp {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .log-tag {
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        .log-tag.info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .log-tag.success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .log-tag.warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .log-tag.danger { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        /* --- TIMELINE I LISTY WYSZUKIWANIA --- */
         .timeline-list {
             display: flex;
             flex-direction: column;
@@ -417,93 +566,95 @@
         }
 
         .timeline-item {
-            background: var(--bg-input);
+            background: rgba(31, 41, 55, 0.4);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 15px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .timeline-item:hover {
             border-color: var(--accent-blue);
-            background: #ffffff;
-            box-shadow: var(--shadow);
+            background: rgba(31, 41, 55, 0.6);
         }
 
-        .timeline-details {
+        .timeline-meta {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
 
-        .info-strip {
-            background: var(--accent-blue-light);
-            border: 1px dashed var(--accent-blue);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--accent-blue);
-            font-weight: 600;
-        }
-
-        .log-box {
-            background: var(--police-blue);
-            border-radius: 8px;
-            padding: 16px;
-            max-height: 250px;
-            overflow-y: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: #e2e8f0;
-        }
-
-        .log-entry {
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            gap: 15px;
-        }
-
-        .log-time { color: var(--accent-blue); font-weight: bold; }
-
-        /* TABELE */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        th {
-            text-align: left;
-            padding: 14px;
-            border-bottom: 2px solid var(--accent-blue);
-            color: var(--police-blue);
-            text-transform: uppercase;
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
             font-weight: 800;
+            text-transform: uppercase;
         }
 
-        td {
-            padding: 14px;
+        .badge-clean { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-wanted { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-noted { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        /* --- TARYFIKATOR MANDATÓW --- */
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .calculator-container { grid-template-columns: 1fr; }
+        }
+
+        .ticket-list {
+            max-height: 450px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(17, 24, 39, 0.4);
+        }
+
+        .ticket-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
             border-bottom: 1px solid var(--border);
-            color: var(--text-normal);
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        tr:hover td {
-            background: var(--accent-blue-light);
+        .ticket-item:hover {
+            background: rgba(59, 130, 246, 0.05);
         }
 
-        /* MODALE */
+        .ticket-item.selected {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .fine-summary-card {
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* --- OKNA MODALNE (SYSTEM PODGLĄDU I DRUKU) --- */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(8px);
             z-index: 5000;
             justify-content: center;
             align-items: center;
@@ -511,8 +662,8 @@
 
         .modal-window {
             background: var(--bg-card);
-            border-radius: 12px;
-            width: 700px;
+            border-radius: 16px;
+            width: 850px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
@@ -521,799 +672,1120 @@
             border: 1px solid var(--border);
         }
 
-        .modal-header-ops {
-            background: var(--police-blue);
-            color: #ffffff;
-            padding: 20px;
+        .modal-header {
+            background: #1f2937;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .modal-body-ops {
-            padding: 24px;
-            overflow-y: auto;
+        .modal-header h3 {
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #ffffff;
         }
 
-        .modal-footer-ops {
-            background: var(--bg-input);
-            padding: 16px 24px;
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            background: #f3f4f6; /* Symulacja jasnej kartki papieru dla podglądu dokumentu */
+        }
+
+        .modal-footer {
+            background: #111827;
+            padding: 20px 30px;
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 15px;
         }
 
-        .a4-document {
+        /* --- ARCHITEKTURA CYFROWEGO DOKUMENTU A4 --- */
+        .a4-document-view {
             background: #ffffff;
             color: #000000;
-            padding: 40px;
+            padding: 50px;
             font-family: 'Courier New', Courier, monospace;
-            border: 1px solid #000;
-            line-height: 1.5;
+            border: 2px solid #000000;
+            line-height: 1.6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 13px;
         }
 
         .a4-header {
             text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            border-bottom: 3px double #000000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .a4-header h2 {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .a4-header p {
+            font-size: 11px;
+            font-weight: bold;
         }
 
         .a4-section {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
-        .a4-title {
+        .a4-section-title {
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 900;
             text-transform: uppercase;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #000;
+            border-bottom: 1.5px solid #000000;
+            margin-bottom: 12px;
+            padding-bottom: 4px;
         }
 
-        .template-selector {
-            display: flex;
+        .a4-meta-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
-        .template-btn {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            color: var(--text-normal);
-            padding: 12px 16px;
-            font-size: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            flex-grow: 1;
-            text-transform: uppercase;
+        .signature-area {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-placeholder {
+            border-top: 1px dotted #000000;
+            width: 250px;
+            text-align: center;
+            padding-top: 8px;
+            font-size: 10px;
             font-weight: bold;
-            transition: all 0.2s;
         }
 
-        .template-btn.active {
-            border-color: var(--accent-blue);
-            color: #ffffff;
-            background: var(--accent-blue);
+        /* --- STYLIZACJA PRZY DRUKOWANIU --- */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .modal-overlay, #ops-modal {
+                position: absolute;
+                left: 0; top: 0;
+                width: 100%; height: auto;
+                background: none;
+                display: block !important;
+            }
+            #modal-doc-content, #modal-doc-content * {
+                visibility: visible;
+            }
+            #modal-doc-content {
+                position: absolute;
+                left: 0; top: 0;
+                width: 100%;
+            }
+            .modal-window, .modal-body {
+                background: none;
+                border: none;
+                box-shadow: none;
+                width: 100%;
+                max-height: none;
+                overflow: visible;
+                padding: 0;
+            }
+            .modal-header, .modal-footer {
+                display: none !important;
+            }
+            .a4-document-view {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- SYSTEM AUTORYZACJI - DISCORD OAUTH2 -->
+    <!-- SYSTEM AUTORYZACJI DISCORD -->
     <div id="auth-overlay">
         <div class="auth-card">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Orzeł KSP" style="height: 80px; margin-bottom: 20px;">
-            <h2 style="font-size: 20px; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;">KSP SECURITY</h2>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.5;">
-                System zastrzeżony Komendy Stołecznej Policji.<br>Wymagana weryfikacja tożsamości kontem Discord.
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Orzeł KSP" style="height: 90px; margin-bottom: 25px;">
+            <h2 style="font-size: 20px; margin-bottom: 10px; font-weight: 900; letter-spacing: 1.5px; color: #ffffff;">CYFROWY TERMINAL KSP</h2>
+            <p id="auth-status-text" style="font-size: 12px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5;">
+                Próba dostępu do systemu operacyjnego Komendy Stołecznej Policji. Zaloguj się za pomocą konta Discord posiadającego autoryzację z rolą służbową.
             </p>
             
-            <button class="btn-discord" onclick="redirectToDiscord()">
-                <i class="fa-brands fa-discord" style="font-size: 20px;"></i> Zaloguj przez Discord
+            <button class="discord-btn" id="btn-discord-login" onclick="loginWithDiscord()">
+                <i class="fa-brands fa-discord"></i> Uwierzytelnij przez Discord
             </button>
             
-            <div id="auth-error" style="color: var(--danger); font-size: 11px; margin-top: 15px; display: none; font-weight: bold;">
-                Błąd weryfikacji tożsamości Discord! Spróbuj ponownie.
-            </div>
+            <div id="auth-error" style="color: var(--danger); font-size: 11px; margin-top: 20px; display: none; font-weight: 800; line-height: 1.5; background: rgba(239,68,68,0.1); padding: 12px; border-radius: 8px; border: 1px solid var(--danger);"></div>
         </div>
     </div>
 
-    <!-- OKNO PODGLĄDU DOKUMENTÓW -->
+    <!-- OKNO PODGLĄDU DOKUMENTÓW (DRUK A4) -->
     <div id="ops-modal" class="modal-overlay">
         <div class="modal-window">
-            <div class="modal-header-ops">
-                <span style="font-weight: bold;" id="modal-doc-title">PROTOKÓŁ OPERACYJNY</span>
-                <span style="cursor: pointer; font-size: 20px;" onclick="closeOpsModal()">&times;</span>
+            <div class="modal-header">
+                <h3 id="modal-doc-title">CYFROWY WYDRUK ARCHIWALNY KSIP</h3>
+                <span style="cursor: pointer; font-size: 24px; color: var(--text-muted);" onclick="closeOpsModal()">&times;</span>
             </div>
-            <div class="modal-body-ops" id="modal-doc-content">
-                <!-- Dynamiczny druk -->
+            <div class="modal-body" id="modal-doc-content">
+                <!-- Generowany dynamicznie szablon dokumentu -->
             </div>
-            <div class="modal-footer-ops">
-                <button class="btn-ops" id="modal-del-btn" style="color: var(--danger); border-color: var(--danger);">USUŃ Z BAZY</button>
-                <button class="btn-ops btn-accent" onclick="window.print()"><i class="fa-solid fa-print"></i> Drukuj</button>
-                <button class="btn-ops" onclick="closeOpsModal()">ZAMKNIJ</button>
+            <div class="modal-footer">
+                <button class="btn-ops btn-danger" id="modal-del-btn"><i class="fa-solid fa-trash-can"></i> Usuń z Archiwum</button>
+                <button class="btn-ops btn-accent" onclick="window.print()"><i class="fa-solid fa-print"></i> Drukuj (A4)</button>
+                <button class="btn-ops" onclick="closeOpsModal()">Zamknij podgląd</button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN APP STRUCTURE -->
-    <div id="app-container" style="display: none;">
-        
+    <!-- APLIKACJA GŁÓWNA -->
+    <div id="app-container">
         <header>
-            <div class="logo-area">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Orzeł KSP">
-                <div class="logo-text">
-                    <h1>CYFROWY TERMINAL KSP</h1>
-                    <span>CYBER-BLUE OPERATIONAL SYSTEM v7.0</span>
+            <div class="header-brand">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Godło KSP">
+                <div class="brand-text">
+                    <h1>KOMENDA STOŁECZNA POLICJI</h1>
+                    <span>SYSTEM OPERACYJNY TACTICAL-BLUE v7.0</span>
                 </div>
             </div>
 
             <nav>
-                <button class="nav-btn active" data-target="sluzba"><i class="fa-solid fa-clock"></i> Służba i Godziny</button>
-                <button class="nav-btn" data-target="kartoteka"><i class="fa-solid fa-id-card"></i> Kartoteka (KSIP)</button>
-                <button class="nav-btn" data-target="dokumenty"><i class="fa-solid fa-file-invoice"></i> Protokoły</button>
-                <button class="nav-btn" data-target="taryfikator"><i class="fa-solid fa-gavel"></i> Taryfikator</button>
+                <button class="nav-btn active" data-target="dashboard"><i class="fa-solid fa-shield-halved"></i> Konsola Główna</button>
+                <button class="nav-btn" data-target="sluzba"><i class="fa-solid fa-clock"></i> Służba i Godziny</button>
+                <button class="nav-btn" data-target="kartoteka"><i class="fa-solid fa-id-card"></i> Kartoteka KSIP</button>
+                <button class="nav-btn" data-target="taryfikator"><i class="fa-solid fa-calculator"></i> Taryfikator i Mandaty</button>
+                <button class="nav-btn" data-target="dokumenty"><i class="fa-solid fa-file-contract"></i> Protokoły</button>
             </nav>
 
-            <div class="header-status">
-                <!-- Informacja o zalogowanym koncie Discord -->
-                <div class="discord-profile">
-                    <img id="user-avatar" class="discord-avatar" src="" alt="Avatar">
-                    <span id="user-username" class="discord-name">Użytkownik</span>
+            <div class="header-profile">
+                <div class="profile-card">
+                    <img id="user-avatar" src="" alt="">
+                    <div class="profile-info">
+                        <span id="user-tag" class="profile-name">Operacyjny KSP</span>
+                        <span class="profile-role">Funkcjonariusz KSP</span>
+                    </div>
                 </div>
-
-                <button class="btn-ops" onclick="logoutSystem()" style="background: transparent; color: white; border-color: rgba(255,255,255,0.2); padding: 8px 14px; font-size: 11px;"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</button>
-                <div class="system-time">
-                    <div id="clock-t" class="time-digits">00:00:00</div>
-                    <div id="clock-d" class="date-digits">01 STYCZNIA 2026</div>
+                <button class="btn-ops" onclick="logoutSystem()" style="padding: 8px 14px; font-size: 11px;"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</button>
+                <div class="system-clock">
+                    <div id="clock-t" class="clock-time">00:00:00</div>
+                    <div id="clock-d" class="clock-date">01 STYCZNIA 2026</div>
                 </div>
             </div>
         </header>
 
         <main>
-            <!-- DASHBOARD OPERACYJNY -->
-            <div class="dashboard-row">
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fa-solid fa-hourglass-half"></i></div>
-                    <div class="stat-info">
-                        <h4>Suma Wypracowanych Godzin</h4>
-                        <p id="stats-total-hours">00:00:00</p>
+            <!-- WIDOK: STATYSTYKI SYSTEMU (DASHBOARD) -->
+            <div id="view-dashboard" class="viewport active">
+                <div class="stats-grid">
+                    <div class="stat-widget accented">
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div class="stat-data">
+                            <h3>Suma Godzin Służby</h3>
+                            <p id="stats-total-hours">00:00:00</p>
+                        </div>
+                    </div>
+                    <div class="stat-widget">
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="stat-data">
+                            <h3>Liczba Funkcjonariuszy</h3>
+                            <p id="stats-total-officers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-widget">
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-folder-open"></i></div>
+                        <div class="stat-data">
+                            <h3>Wpisy w Kartotece KSIP</h3>
+                            <p id="stats-total-citizens">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-widget">
+                        <div class="stat-icon-wrapper"><i class="fa-solid fa-file-invoice"></i></div>
+                        <div class="stat-data">
+                            <h3>Archiwalne Dokumenty</h3>
+                            <p id="stats-total-docs">0</p>
+                        </div>
                     </div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fa-solid fa-file-shield"></i></div>
-                    <div class="stat-info">
-                        <h4>Zarejestrowani Policjanci</h4>
-                        <p id="stats-total-sessions">0</p>
+
+                <div class="grid-2">
+                    <div class="tactical-card">
+                        <div class="card-header-tactical">
+                            <span class="card-title-tactical"><i class="fa-solid fa-bullhorn"></i> Alert Operacyjny i Komunikaty KSP</span>
+                        </div>
+                        <div style="font-size: 13px; line-height: 1.8;">
+                            <p style="color: var(--danger); font-weight: bold; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i> STOPIEŃ ZAGROŻENIA: ALPHA-SECURE</p>
+                            <p style="color: var(--text-normal); margin-bottom: 15px;">Wszyscy funkcjonariusze rozpoczynający patrol mają obowiązek zalogowania się do systemu KSP, zarejestrowania broni bocznej oraz wpisania aktualnego stanu licznika pojazdu.</p>
+                            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-blue); padding: 15px; border-radius: 8px;">
+                                <strong style="color: white; display: block; margin-bottom: 5px;">Przypomnienie KGP:</strong>
+                                Każde wystawienie mandatu karnego musi zostać udokumentowane w systemie KSIP wraz z dokładnym przypisaniem punktów karnych i kwoty mandatu na podstawie aktualnego taryfikatora.
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
-                    <div class="stat-info">
-                        <h4>Wystawione Mandaty</h4>
-                        <p id="stats-total-tickets">0</p>
-                    </div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-                    <div class="stat-info">
-                        <h4>Obywatele w Bazie</h4>
-                        <p id="stats-total-citizens">0</p>
+
+                    <div class="tactical-card">
+                        <div class="card-header-tactical">
+                            <span class="card-title-tactical"><i class="fa-solid fa-database"></i> Logi Konsoli Logowania i Zdarzeń</span>
+                        </div>
+                        <div class="terminal-log-box" id="dashboard-logs" style="height: 250px;"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: SŁUŻBA -->
-            <div id="view-sluzba" class="viewport active">
+            <!-- WIDOK: SŁUŻBA I GODZINY -->
+            <div id="view-sluzba" class="viewport">
                 <div class="grid-2">
-                    
-                    <!-- Formularz Karty Drogowej -->
-                    <div class="cyber-card">
+                    <div class="tactical-card">
                         <div class="card-header-tactical">
-                            <span class="card-title-tactical"><i class="fa-solid fa-play"></i> Logowanie Godzin i Patrolu</span>
+                            <span class="card-title-tactical"><i class="fa-solid fa-circle-play"></i> Rejestracja Karty Drogowej i Służby</span>
                         </div>
                         
+                        <!-- Formularz logowania do patrolu -->
                         <div id="duty-inactive-form">
-                            <p style="font-size: 13px; color: var(--text-normal); margin-bottom: 20px;">
-                                Wypełnij kartę drogową pojazdu, aby aktywować system, rozpocząć liczenie godzin i odblokować pozostałe moduły taktyczne.
-                            </p>
-                            <form id="duty-activation-form">
+                            <form id="duty-activation-form" onsubmit="startDuty(event)">
                                 <div class="grid-2">
-                                    <div class="form-unit">
+                                    <div class="form-group">
                                         <label>Nazwisko i Imię Funkcjonariusza</label>
                                         <input type="text" id="duty-officer-name" class="input-tactical" placeholder="np. Kowalski Jan" required>
                                     </div>
-                                    <div class="form-unit">
-                                        <label>Numer Odznaki</label>
+                                    <div class="form-group">
+                                        <label>Numer Legitymacji / Odznaki</label>
                                         <input type="text" id="duty-badge-num" class="input-tactical" placeholder="np. 210943" required>
                                     </div>
                                 </div>
                                 <div class="grid-2">
-                                    <div class="form-unit">
-                                        <label>Pojazd Służbowy</label>
-                                        <input type="text" id="duty-car-model" class="input-tactical" placeholder="np. Kia Ceed" required>
+                                    <div class="form-group">
+                                        <label>Pojazd Służbowy (Model/Marka)</label>
+                                        <input type="text" id="duty-car-model" class="input-tactical" placeholder="np. Kia Ceed SW II" required>
                                     </div>
-                                    <div class="form-unit">
-                                        <label>Numer Rejestracyjny</label>
-                                        <input type="text" id="duty-car-plate" class="input-tactical" placeholder="np. HPZ A001" required>
+                                    <div class="form-group">
+                                        <label>Rejestracja Pojazdu</label>
+                                        <input type="text" id="duty-car-plate" class="input-tactical" placeholder="np. HPZ A211" required>
                                     </div>
                                 </div>
                                 <div class="grid-2">
-                                    <div class="form-unit">
-                                        <label>Uzbrojenie</label>
-                                        <input type="text" id="duty-weapon" class="input-tactical" placeholder="np. Walther P99" required>
+                                    <div class="form-group">
+                                        <label>Numer Seryjny Broni Służbowej</label>
+                                        <input type="text" id="duty-weapon" class="input-tactical" placeholder="np. Walther P99 SN-928" required>
                                     </div>
-                                    <div class="form-unit">
-                                        <label>Stan licznika (START)</label>
-                                        <input type="number" id="duty-mileage" class="input-tactical" placeholder="np. 182400" required>
+                                    <div class="form-group">
+                                        <label>Początkowy Stan Licznika (KM)</label>
+                                        <input type="number" id="duty-mileage" class="input-tactical" placeholder="np. 154200" required>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn-ops btn-accent" style="width: 100%; justify-content: center; height: 50px;"><i class="fa-solid fa-shield-halved"></i> Rozpocznij Służbę / Odpal Godziny</button>
+                                <button type="submit" class="btn-ops btn-accent" style="width: 100%; justify-content: center; height: 50px;"><i class="fa-solid fa-shield-halved"></i> Rozpocznij Aktywny Patrol</button>
                             </form>
                         </div>
 
-                        <div id="duty-active-panel" style="display: none; text-align: center; padding: 10px 0;">
-                            <span style="font-size: 11px; color: var(--accent-blue); font-weight: 800; letter-spacing: 2px;">STATUS: AKTYWNY PATROL</span>
-                            <div id="duty-timer" style="font-size: 48px; font-weight: 800; margin: 15px 0; font-family: 'JetBrains Mono', monospace;">00:00:00</div>
-                            <div id="duty-active-info" style="font-size: 12px; color: var(--text-normal); margin-bottom: 25px; line-height: 1.8; text-align: left; background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-                                <!-- Informacje -->
-                            </div>
-                            <button class="btn-ops btn-accent" id="btn-stop-duty" style="width: 100%; justify-content: center; height: 50px; background: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-stop"></i> Zakończ Służbę i Zapisz Godziny</button>
+                        <!-- Widok aktywnej służby (Timer) -->
+                        <div id="duty-active-panel" style="display: none; text-align: center;">
+                            <span class="status-badge" style="background: rgba(59, 130, 246, 0.2); color: var(--accent-cyan); font-size: 12px; letter-spacing: 2px;">CZAS TRWANIA PATROLU</span>
+                            <div id="duty-timer" style="font-size: 56px; font-weight: 900; margin: 20px 0; font-family: 'JetBrains Mono', monospace; color: white;">00:00:00</div>
+                            <div id="duty-active-info" style="font-size: 13px; color: var(--text-normal); text-align: left; background: var(--bg-input); padding: 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 25px; line-height: 1.8;"></div>
+                            <button class="btn-ops btn-danger" onclick="stopDuty()" style="width: 100%; justify-content: center; height: 50px;"><i class="fa-solid fa-circle-stop"></i> Zakończ Służbę i Zapisz Kartę Drogową</button>
                         </div>
                     </div>
 
-                    <!-- Logi Bieżącej Zmiany -->
-                    <div class="cyber-card">
+                    <div class="tactical-card">
                         <div class="card-header-tactical">
-                            <span class="card-title-tactical"><i class="fa-solid fa-clipboard-list"></i> Logi Konsoli / Systemu</span>
+                            <span class="card-title-tactical"><i class="fa-solid fa-receipt"></i> Logi Konsoli Służbowej</span>
                         </div>
-                        <div class="log-box" id="shift-logs-container" style="height: 350px;">
-                            <!-- Logi systemowe -->
-                        </div>
+                        <div class="terminal-log-box" id="shift-logs-container" style="height: 380px;"></div>
                     </div>
-
                 </div>
 
-                <!-- ARCHIWUM GODZIN SŁUŻBY (POŁĄCZONE I ZSUMOWANE) -->
-                <div class="cyber-card">
+                <div class="tactical-card">
                     <div class="card-header-tactical">
-                        <span class="card-title-tactical"><i class="fa-solid fa-table"></i> Zsumowane Godziny Pracy Funkcjonariuszy</span>
+                        <span class="card-title-tactical"><i class="fa-solid fa-table"></i> Archiwum Kart Drogowych i Godzin Pracy</span>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="table-responsive">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Funkcjonariusz</th>
-                                    <th>Numer Odznaki</th>
-                                    <th>Ostatni Używany Pojazd</th>
-                                    <th>Łączny Wypracowany Czas</th>
-                                    <th>Liczba Logowań</th>
+                                    <th>Odznaka</th>
+                                    <th>Radiowóz</th>
+                                    <th>Zsumowany Czas</th>
+                                    <th>Wyjazdy</th>
                                     <th>Status Operacyjny</th>
                                 </tr>
                             </thead>
                             <tbody id="hours-table-body">
-                                <!-- Zsumowane konta policjantów -->
+                                <!-- Dynamiczne dane -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: KARTOTEKA -->
+            <!-- WIDOK: KARTOTEKA KSIP -->
             <div id="view-kartoteka" class="viewport">
                 <div class="grid-2">
-                    <div class="cyber-card">
+                    <div class="tactical-card">
                         <div class="card-header-tactical">
-                            <span class="card-title-tactical"><i class="fa-solid fa-user-plus"></i> Dodaj Obywatela do Rejestru</span>
+                            <span class="card-title-tactical"><i class="fa-solid fa-user-shield"></i> Wprowadź Nowy Wpis do KSIP</span>
                         </div>
-                        <form id="citizen-add-form">
+                        <form id="citizen-add-form" onsubmit="addCitizen(event)">
                             <div class="grid-2">
-                                <div class="form-unit">
-                                    <label>Imię i Nazwisko</label>
-                                    <input type="text" id="cit-name" class="input-tactical" required placeholder="np. Michał Nowak">
+                                <div class="form-group">
+                                    <label>Imię i Nazwisko Obywatela</label>
+                                    <input type="text" id="cit-name" class="input-tactical" placeholder="np. Kowalski Jan" required>
                                 </div>
-                                <div class="form-unit">
+                                <div class="form-group">
                                     <label>Numer PESEL</label>
-                                    <input type="text" id="cit-pesel" class="input-tactical" required placeholder="np. 95021208931">
+                                    <input type="text" id="cit-pesel" class="input-tactical" placeholder="np. 95021208931" required>
                                 </div>
                             </div>
                             <div class="grid-2">
-                                <div class="form-unit">
-                                    <label>Status KSIP</label>
+                                <div class="form-group">
+                                    <label>Status w KSIP</label>
                                     <select id="cit-status" class="input-tactical">
-                                        <option value="CZYSTY">CZYSTY (Brak wpisów)</option>
+                                        <option value="CZYSTY">CZYSTY (Brak uwag w rejestrze)</option>
                                         <option value="NOTOWANY">NOTOWANY KARTOTEKOWO</option>
                                         <option value="POSZUKIWANY">POSZUKIWANY / DO ZATRZYMANIA</option>
                                     </select>
                                 </div>
-                                <div class="form-unit">
-                                    <label>Zagrożenie</label>
+                                <div class="form-group">
+                                    <label>Stopień Zagrożenia</label>
                                     <select id="cit-threat" class="input-tactical">
-                                        <option value="Niskie">Niskie</option>
-                                        <option value="Średnie">Średnie</option>
-                                        <option value="WYSOKIE (Niebezpieczny)">WYSOKIE (Niebezpieczny)</option>
+                                        <option value="Niskie">Niskie (Brak agresji)</option>
+                                        <option value="Średnie">Średnie (Próby ucieczki)</option>
+                                        <option value="WYSOKIE">WYSOKIE (Niebezpieczny / Uzbrojony)</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-unit">
-                                <label>Cechy i uwagi</label>
-                                <input type="text" id="cit-notes" class="input-tactical" placeholder="Tatuaże, blizny, historia ucieczek...">
+                            <div class="form-group">
+                                <label>Cechy Szczególne / Uwagi Operacyjne</label>
+                                <input type="text" id="cit-notes" class="input-tactical" placeholder="np. Tatuaż na szyi (smok), blizna na lewej dłoni. Notowany za rozboje.">
                             </div>
-                            <button type="submit" class="btn-ops btn-accent"><i class="fa-solid fa-plus"></i> Zatwierdź i Wprowadź</button>
+                            <button type="submit" class="btn-ops btn-accent"><i class="fa-solid fa-floppy-disk"></i> Zapisz Kartotekę w Bazie</button>
                         </form>
                     </div>
 
-                    <div class="cyber-card">
+                    <div class="tactical-card">
                         <div class="card-header-tactical">
-                            <span class="card-title-tactical"><i class="fa-solid fa-magnifying-glass"></i> Przeszukaj Bazę KSIP</span>
+                            <span class="card-title-tactical"><i class="fa-solid fa-magnifying-glass"></i> Przeszukaj Centralny Rejestr KSIP</span>
                         </div>
-                        <div class="form-unit">
-                            <label>Szukaj (PESEL lub Nazwisko)</label>
-                            <input type="text" id="cit-search-input" class="input-tactical" placeholder="Rozpocznij wyszukiwanie...">
+                        <div class="form-group">
+                            <label>Wpisz PESEL lub Nazwisko</label>
+                            <input type="text" id="cit-search-input" class="input-tactical" placeholder="Rozpocznij wpisywanie, aby filtrować dane..." oninput="searchCitizens()">
                         </div>
-                        <div id="cit-list-container" class="timeline-list" style="max-height: 250px; overflow-y: auto;">
-                            <!-- Wyniki -->
+                        <div id="cit-list-container" class="timeline-list" style="max-height: 290px; overflow-y: auto;">
+                            <!-- Elementy dynamiczne wyszukiwania -->
                         </div>
-                    </div>
-                </div>
-
-                <div class="cyber-card">
-                    <div class="card-header-tactical">
-                        <span class="card-title-tactical"><i class="fa-solid fa-user-shield"></i> Rejestr i Historia Zatrzymujących Funkcjonariuszy</span>
-                    </div>
-                    <div class="grid-3" style="align-items: flex-end;">
-                        <div class="form-unit" style="margin-bottom: 0;">
-                            <label>Wyszukaj Policjanta</label>
-                            <input type="text" id="officer-search-input" class="input-tactical" placeholder="np. Kowalski Jan">
-                        </div>
-                        <button class="btn-ops btn-accent" onclick="searchOfficerHistory()"><i class="fa-solid fa-database"></i> Generuj Rejestr Zatrzymujących</button>
-                    </div>
-                    <div id="officer-results-container" class="timeline-list" style="margin-top: 20px;">
-                        <div class="info-strip">Wpisz dane policjanta powyżej, aby wygenerować historię zatrzymań.</div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: PROTOKOŁY -->
-            <div id="view-dokumenty" class="viewport">
-                <div class="template-selector">
-                    <button class="template-btn active" data-template="zatrzymanie">Protokół Zatrzymania</button>
-                    <button class="template-btn" data-template="kontrolaosobista">Kontrola Osobista</button>
-                    <button class="template-btn" data-template="notatka">Notatka Urzędowa</button>
-                </div>
-
-                <div class="cyber-card">
-                    <p style="font-size: 13px; color: var(--text-normal); margin-bottom: 20px;">
-                        Wybierz dokument powyżej, aby wygenerować jego szablon. Moduł generatora będzie dostępny w pełnej wersji.
-                    </p>
-                    <button class="btn-ops btn-accent" onclick="alert('Generowanie dokumentów w trakcie rozwoju...')"><i class="fa-solid fa-gears"></i> Generuj Szablon</button>
-                </div>
-            </div>
-
-            <!-- VIEW: TARYFIKATOR -->
+            <!-- WIDOK: TARYFIKATOR I MANDATY -->
             <div id="view-taryfikator" class="viewport">
-                <div class="cyber-card">
+                <div class="tactical-card">
                     <div class="card-header-tactical">
-                        <span class="card-title-tactical"><i class="fa-solid fa-book"></i> Kodeks i Taryfikator Mandatów</span>
+                        <span class="card-title-tactical"><i class="fa-solid fa-scale-balanced"></i> Kalkulator Mandatowy KGP</span>
                     </div>
-                    <p style="font-size: 13px; color: var(--text-normal);">
-                        W tym miejscu znajduje się taryfikator mandatów oraz kodeks karny KSP.
-                    </p>
+                    
+                    <div class="calculator-container">
+                        <div>
+                            <div class="form-group">
+                                <label>Przeszukaj listę wykroczeń</label>
+                                <input type="text" id="tariff-search-input" class="input-tactical" placeholder="np. prędkość, alkohol, dokumenty..." oninput="filterTariff()">
+                            </div>
+                            <div class="ticket-list" id="tariff-list">
+                                <!-- Wpisy taryfikatora generowane z tablicy JS -->
+                            </div>
+                        </div>
+
+                        <div class="fine-summary-card">
+                            <div>
+                                <h3 style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 15px; letter-spacing: 1px;">Kalkulacja Kary</h3>
+                                <div style="margin-bottom: 25px;">
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 800;">Suma Mandatu</span>
+                                    <span id="calc-total-fine" style="font-size: 32px; font-weight: 900; color: #ffffff; font-family: 'JetBrains Mono', monospace;">0 PLN</span>
+                                </div>
+                                <div style="margin-bottom: 25px;">
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; font-weight: 800;">Punkty Karne</span>
+                                    <span id="calc-total-points" style="font-size: 32px; font-weight: 900; color: var(--danger); font-family: 'JetBrains Mono', monospace;">0 pkt</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn-ops btn-accent" style="width: 100%; justify-content: center; margin-bottom: 10px;" onclick="transferToForm()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Przenieś do protokołu</button>
+                                <button class="btn-ops" style="width: 100%; justify-content: center;" onclick="resetCalculator()"><i class="fa-solid fa-arrow-rotate-left"></i> Wyczyść zaznaczenia</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <!-- WIDOK: PROTOKOŁY -->
+            <div id="view-dokumenty" class="viewport">
+                <div class="tactical-card">
+                    <div class="card-header-tactical">
+                        <span class="card-title-tactical"><i class="fa-solid fa-file-pen"></i> Generator Oficjalnych Protokołów</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+                        <button class="btn-ops active" id="btn-t-zatrzymanie" onclick="switchDocTemplate('zatrzymanie')">Protokół Zatrzymania</button>
+                        <button class="btn-ops" id="btn-t-kontrola" onclick="switchDocTemplate('kontrola')">Protokół Kontroli Osobistej</button>
+                        <button class="btn-ops" id="btn-t-notatka" onclick="switchDocTemplate('notatka')">Notatka Urzędowa</button>
+                        <button class="btn-ops" id="btn-t-mandat" onclick="switchDocTemplate('mandat')">Mandat Karny</button>
+                    </div>
+
+                    <form id="doc-generator-form" onsubmit="generateDocument(event)">
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label>Sporządzający Czynność (Funkcjonariusz)</label>
+                                <input type="text" id="doc-officer" class="input-tactical" placeholder="Imię Nazwisko, Stopień" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Osoba Legitymowana / Sprawca</label>
+                                <input type="text" id="doc-subject" class="input-tactical" placeholder="Imię Nazwisko, PESEL" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Miejsce Przeprowadzenia Czynności</label>
+                                <input type="text" id="doc-location" class="input-tactical" placeholder="np. Warszawa, Al. Jerozolimskie" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Uzasadnienie / Opis Przebiegu Czynności (Użyte Środki, Ustalenia)</label>
+                            <textarea id="doc-reason" class="input-tactical" style="height: 150px; resize: none;" placeholder="Wpisz szczegółowy przebieg zdarzenia, podjęte środki przymusu bezpośredniego (ŚPB) lub powód zatrzymania/kontroli..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-ops btn-accent"><i class="fa-solid fa-signature"></i> Podpisz i Wygeneruj Dokument</button>
+                    </form>
+                </div>
+
+                <div class="tactical-card">
+                    <div class="card-header-tactical">
+                        <span class="card-title-tactical"><i class="fa-solid fa-box-archive"></i> Rejestr Archiwalny Protokołów Operacyjnych</span>
+                    </div>
+                    <div id="docs-list" class="timeline-list">
+                        <!-- Generowana lista dokumentów -->
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
+    <!-- LOGIKA SYSTEMOWA (JAVASCRIPT) -->
     <script>
-        // ==========================================
-        //  KONFIGURACJA DISCORD OAUTH2
-        // ==========================================
-        const DISCORD_CLIENT_ID = '1526962966975610991'; // <--- TWÓJ ZWERYFIKOWANY CLIENT ID
-        const DISCORD_REDIRECT_URI = window.location.origin + window.location.pathname; // Automatycznie bierze adres Twojej strony
-
-        // ==========================================
-        //  LOGIKA AUTORYZACJI OAUTH2 DISCORD
-        // ==========================================
+        // --- KONFIGURACJA STRUKTURALNA OAUTH2 DISCORD ---
+        const DISCORD_CLIENT_ID = '1526962966975610991';
+        const GUILD_ID = '1527014315381751928';
+        const ROLE_ID = '1527014315411116062';
         
-        function redirectToDiscord() {
-            const scope = 'identify';
-            const responseType = 'token';
-            const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=${responseType}&scope=${scope}`;
+        // WPISZ SWÓJ WEBHOOK URL DISCORD, ABY WYSYŁAĆ LOGI NA ŻYWO NA KANAŁ
+        const DISCORD_WEBHOOK_URL = ''; 
+
+        // --- BAZA DANYCH (LOCALSTORAGE) ---
+        let db = {
+            citizens: JSON.parse(localStorage.getItem('ksp_v7_citizens')) || [],
+            dutyHours: JSON.parse(localStorage.getItem('ksp_v7_duty')) || {},
+            documents: JSON.parse(localStorage.getItem('ksp_v7_documents')) || [],
+            logs: JSON.parse(localStorage.getItem('ksp_v7_logs')) || []
+        };
+
+        // --- STAN SYSTEMU ---
+        let currentActiveDuty = null;
+        let dutyInterval = null;
+        let activeDocTemplate = 'zatrzymanie';
+        let currentUser = null;
+        let selectedTariffItems = [];
+
+        // --- TARYFIKATOR TARYFY MANDATOWEJ KGP ---
+        const TARIFF_DB = [
+            { id: 1, text: "Przekroczenie prędkości do 10 km/h", fine: 50, points: 1, category: "Prędkość" },
+            { id: 2, text: "Przekroczenie prędkości o 11-15 km/h", fine: 100, points: 2, category: "Prędkość" },
+            { id: 3, text: "Przekroczenie prędkości o 16-20 km/h", fine: 200, points: 3, category: "Prędkość" },
+            { id: 4, text: "Przekroczenie prędkości o 21-25 km/h", fine: 300, points: 5, category: "Prędkość" },
+            { id: 5, text: "Przekroczenie prędkości o 26-30 km/h", fine: 400, points: 7, category: "Prędkość" },
+            { id: 6, text: "Przekroczenie prędkości o 31-40 km/h", fine: 800, points: 9, category: "Prędkość" },
+            { id: 7, text: "Przekroczenie prędkości o 41-50 km/h", fine: 1000, points: 11, category: "Prędkość" },
+            { id: 8, text: "Przekroczenie prędkości o 51-60 km/h", fine: 1500, points: 13, category: "Prędkość" },
+            { id: 9, text: "Kierowanie pojazdem w stanie nietrzeźwości (powyżej 0.5 promila)", fine: 2500, points: 15, category: "Alkohol" },
+            { id: 10, text: "Kierowanie pojazdem po użyciu alkoholu (0.2 - 0.5 promila)", fine: 1000, points: 10, category: "Alkohol" },
+            { id: 11, text: "Niezastosowanie się do sygnałów świetlnych (Czerwone światło)", fine: 500, points: 15, category: "Ruch drogowy" },
+            { id: 12, text: "Korzystanie podczas jazdy z telefonu wymagające trzymania słuchawki", fine: 500, points: 12, category: "Ruch drogowy" },
+            { id: 13, text: "Niewskazanie sprawcy wykroczenia drogowego na żądanie", fine: 2000, points: 0, category: "Inne" },
+            { id: 14, text: "Stworzenie zagrożenia bezpieczeństwa w ruchu drogowym (kolizja)", fine: 1500, points: 10, category: "Ruch drogowy" },
+            { id: 15, text: "Brak zapiętych pasów bezpieczeństwa podczas jazdy", fine: 100, points: 5, category: "Ruch drogowy" },
+            { id: 16, text: "Znieważenie funkcjonariusza publicznego na służbie", fine: 3000, points: 0, category: "Karne" },
+            { id: 17, text: "Naruszenie nietykalności cielesnej funkcjonariusza", fine: 5000, points: 0, category: "Karne" },
+            { id: 18, text: "Niestosowanie się do poleceń wydawanych przez policjanta", fine: 500, points: 0, category: "Karne" }
+        ];
+
+        // --- INICJALIZACJA STRONY ---
+        window.onload = function() {
+            checkDiscordAuth();
+            updateClock();
+            setInterval(updateClock, 1000);
+            setupNavigation();
+            renderStats();
+            renderLogs();
+            renderHoursTable();
+            renderDocuments();
+            renderTariff();
+        };
+
+        // --- SYSTEM LOGOWANIA DISCORD OAUTH2 ---
+        function loginWithDiscord() {
+            const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+            const scope = encodeURIComponent('identify guilds guilds.members.read');
+            const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}`;
             window.location.href = authUrl;
         }
 
-        function checkDiscordCallback() {
+        async function checkDiscordAuth() {
             const fragment = new URLSearchParams(window.location.hash.slice(1));
-            const accessToken = fragment.get('access_token');
+            let accessToken = fragment.get('access_token') || localStorage.getItem('ksp_v7_discord_token');
 
-            if (accessToken) {
-                // Usuwamy token z paska adresu dla estetyki i bezpieczeństwa
-                window.history.replaceState({}, document.title, window.location.pathname);
-                
-                // Pobieramy dane użytkownika z Discord API
-                fetch('https://discord.com/api/users/@me', {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error("Problem z pobraniem danych Discord");
-                    return res.json();
-                })
-                .then(userData => {
-                    // Zapisujemy zalogowanego użytkownika w pamięci przeglądarki
-                    localStorage.setItem('discord_user', JSON.stringify({
-                        username: userData.username,
-                        avatar: userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
-                        loggedIn: true
-                    }));
-                    initApp();
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('auth-error').style.display = 'block';
-                });
-            } else {
-                // Sprawdzamy czy użytkownik jest już zalogowany w sesji
-                const savedUser = localStorage.getItem('discord_user');
-                if (savedUser) {
-                    initApp();
-                } else {
-                    // Brak sesji - pokazujemy ekran logowania
-                    document.getElementById('auth-overlay').style.display = 'flex';
-                    document.getElementById('app-container').style.display = 'none';
-                }
+            if (!accessToken) {
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+                return;
             }
-        }
 
-        function initApp() {
-            const savedUser = JSON.parse(localStorage.getItem('discord_user'));
-            if (savedUser && savedUser.loggedIn) {
-                // Wyłączamy panel logowania, włączamy aplikację
+            localStorage.setItem('ksp_v7_discord_token', accessToken);
+            window.location.hash = ''; // Czyszczenie paska adresu URL
+
+            try {
+                // Pobranie profilu użytkownika Discord
+                const userRes = await fetch('https://discord.com/api/users/@me', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                
+                if (!userRes.ok) throw new Error('Nieudany odczyt profilu z sesji Discord. Spróbuj zalogować się ponownie.');
+                currentUser = await userRes.json();
+
+                // Sprawdzenie obecności użytkownika na serwerze i weryfikacja wymaganej roli
+                const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+
+                if (!memberRes.ok) {
+                    throw new Error('Odmowa autoryzacji: Nie jesteś zalogowany na serwerze KSP!');
+                }
+
+                const memberData = await memberRes.json();
+                const hasRole = memberData.roles.includes(ROLE_ID);
+
+                if (!hasRole) {
+                    throw new Error('Dostęp zablokowany: Twoje konto Discord nie posiada roli służbowej!');
+                }
+
+                // Autoryzacja zakończona sukcesem - schowanie overlay i wyświetlenie aplikacji
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('app-container').style.display = 'flex';
                 
-                // Aktualizujemy widget profilu w prawym rogu
-                document.getElementById('user-avatar').src = savedUser.avatar;
-                document.getElementById('user-username').textContent = savedUser.username;
+                // Uzupełnienie danych profilu użytkownika
+                const avatarUrl = currentUser.avatar ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                document.getElementById('user-avatar').src = avatarUrl;
+                document.getElementById('user-tag').innerText = `${currentUser.username}`;
                 
-                // Uruchamiamy zegary i inne procesy
-                runAppEngine();
+                logSystem(`AUTORYZACJA`, `Zalogowano użytkownika Discord: ${currentUser.username}`);
+                sendDiscordWebhook("🔐 ZALOGOWANO DO TERMINALU KSP", `Użytkownik **${currentUser.username}** (ID: ${currentUser.id}) pomyślnie uwierzytelnił się w systemie.`);
+
+            } catch (error) {
+                localStorage.removeItem('ksp_v7_discord_token');
+                const errBox = document.getElementById('auth-error');
+                errBox.innerText = error.message;
+                errBox.style.display = 'block';
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
             }
         }
 
         function logoutSystem() {
-            localStorage.removeItem('discord_user');
-            // Resetujemy ewentualną aktywną służbę
-            if (dutyInterval) {
-                clearInterval(dutyInterval);
-                dutyInterval = null;
-            }
-            localStorage.removeItem('activeDutyState');
-            
-            // Odświeżamy stronę, co wyrzuci nas do logowania
+            sendDiscordWebhook("🔒 WYLOGOWANO Z TERMINALU", `Użytkownik **${currentUser ? currentUser.username : 'Nieznany'}** wylogował się.`);
+            localStorage.removeItem('ksp_v7_discord_token');
             window.location.reload();
         }
 
-        // ==========================================
-        //  ZEGARY I PROSTE MECHANIZMY SYSTEMU
-        // ==========================================
-        function runAppEngine() {
-            updateClock();
-            setInterval(updateClock, 1000);
-            loadSystemLogs();
-            restoreDutyState();
+        // --- WEBHOOKI DISCORD ---
+        function sendDiscordWebhook(title, description, color = 3066993, fields = []) {
+            if (!DISCORD_WEBHOOK_URL) return;
+
+            const payload = {
+                embeds: [{
+                    title: title,
+                    description: description,
+                    color: color,
+                    fields: fields,
+                    timestamp: new Date().toISOString(),
+                    footer: { text: "Cyfrowy Terminal Operacyjny KSP v7.0" }
+                }]
+            };
+
+            fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error("Discord Webhook Error: ", err));
         }
 
+        // --- ZEGAR SYSTEMOWY ---
         function updateClock() {
             const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0];
-            const months = ["STYCZNIA", "LUTEGO", "MARCA", "KWIETNIA", "MAJA", "CZERWCA", "LIPCA", "SIERPNIA", "WRZEŚNIA", "PAŹDZIERNIKA", "LISTOPADA", "GRUDNIA"];
-            const dateStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-            
-            const clockT = document.getElementById('clock-t');
-            const clockD = document.getElementById('clock-d');
-            if(clockT) clockT.textContent = timeStr;
-            if(clockD) clockD.textContent = dateStr;
+            document.getElementById('clock-t').innerText = now.toTimeString().split(' ')[0];
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('clock-d').innerText = now.toLocaleDateString('pl-PL', options).toUpperCase();
         }
 
-        // ==========================================
-        //  OBSŁUGA ZAKŁADEK (NAWIGACJA)
-        // ==========================================
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const viewports = document.querySelectorAll('.viewport');
-
-        navButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                navButtons.forEach(b => b.classList.remove('active'));
-                viewports.forEach(v => v.classList.remove('active'));
-
-                btn.classList.add('active');
-                const target = btn.getAttribute('data-target');
-                document.getElementById(`view-${target}`).classList.add('active');
-            });
-        });
-
-        // ==========================================
-        //  LOGI KONSOLI SYSTEMOWEJ
-        // ==========================================
-        function loadSystemLogs() {
-            const container = document.getElementById('shift-logs-container');
-            if(!container) return;
-            container.innerHTML = `
-                <div class="log-entry"><span class="log-time">[09:00:12]</span> Zabezpieczenie systemów KSP aktywne.</div>
-                <div class="log-entry"><span class="log-time">[09:01:45]</span> Połączono pomyślnie z bazą danych KSIP.</div>
-                <div class="log-entry"><span class="log-time">[09:02:01]</span> Protokół uwierzytelnienia Discord przeszedł pomyślnie.</div>
-            `;
-        }
-
-        // ==========================================
-        //  KARTA DROGOWA I TIMER SŁUŻBY
-        // ==========================================
-        let dutyInterval = null;
-        let dutySeconds = 0;
-
-        const dutyActivationForm = document.getElementById('duty-activation-form');
-        const dutyInactiveFormDiv = document.getElementById('duty-inactive-form');
-        const dutyActivePanel = document.getElementById('duty-active-panel');
-        const dutyTimer = document.getElementById('duty-timer');
-        const dutyActiveInfo = document.getElementById('duty-active-info');
-        const btnStopDuty = document.getElementById('btn-stop-duty');
-
-        if (dutyActivationForm) {
-            dutyActivationForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                startDuty();
+        // --- SYSTEM NAVI ---
+        function setupNavigation() {
+            document.querySelectorAll('nav .nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    const target = btn.getAttribute('data-target');
+                    document.getElementById(`view-${target}`).classList.add('active');
+                });
             });
         }
 
-        if (btnStopDuty) {
-            btnStopDuty.addEventListener('click', () => {
-                stopDuty();
-            });
-        }
-
-        function startDuty() {
-            const name = document.getElementById('duty-officer-name').value;
+        // --- REJESTR SŁUŻBY I TIMERA ---
+        function startDuty(e) {
+            e.preventDefault();
+            const officer = document.getElementById('duty-officer-name').value;
             const badge = document.getElementById('duty-badge-num').value;
             const car = document.getElementById('duty-car-model').value;
             const plate = document.getElementById('duty-car-plate').value;
             const weapon = document.getElementById('duty-weapon').value;
             const mileage = document.getElementById('duty-mileage').value;
 
-            const dutyState = {
-                active: true,
-                startTime: Date.now(),
-                name, badge, car, plate, weapon, mileage
+            currentActiveDuty = {
+                officer, badge, car, plate, weapon, mileage,
+                startTime: Date.now()
             };
 
-            localStorage.setItem('activeDutyState', JSON.stringify(dutyState));
-            renderActiveDuty(dutyState);
-        }
+            document.getElementById('duty-inactive-form').style.display = 'none';
+            document.getElementById('duty-active-panel').style.display = 'block';
 
-        function renderActiveDuty(state) {
-            dutyInactiveFormDiv.style.display = 'none';
-            dutyActivePanel.style.display = 'block';
-
-            dutyActiveInfo.innerHTML = `
-                <strong>Funkcjonariusz:</strong> ${state.name} (Odznaka: ${state.badge})<br>
-                <strong>Patrol:</strong> ${state.car} [${state.plate}]<br>
-                <strong>Uzbrojenie:</strong> ${state.weapon}<br>
-                <strong>Licznik startowy:</strong> ${state.mileage} km
+            document.getElementById('duty-active-info').innerHTML = `
+                <strong>Funkcjonariusz:</strong> ${officer} (Odznaka: ${badge})<br>
+                <strong>Radiowóz:</strong> ${car} [${plate}] (Stan licznika: ${mileage} km)<br>
+                <strong>Zabezpieczone uzbrojenie:</strong> ${weapon}
             `;
 
-            if (dutyInterval) clearInterval(dutyInterval);
+            logSystem(`SŁUŻBA`, `Rozpoczęto służbę: ${officer} [Odznaka: ${badge}]`);
+            
+            sendDiscordWebhook("🚔 ROZPOCZĘTO SŁUŻBĘ / PATROL", `Funkcjonariusz **${officer}** rozpoczął aktywny patrol radiowozem.`, 3447003, [
+                { name: "Numer Odznaki", value: badge, inline: true },
+                { name: "Pojazd Służbowy", value: `${car} (${plate})`, inline: true },
+                { name: "Broń Służbowa", value: weapon, inline: true }
+            ]);
+
             dutyInterval = setInterval(() => {
-                const diff = Math.floor((Date.now() - state.startTime) / 1000);
-                dutySeconds = diff;
-                
-                const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
-                const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-                const secs = String(diff % 60).padStart(2, '0');
-
-                dutyTimer.textContent = `${hrs}:${mins}:${secs}`;
+                const diff = Date.now() - currentActiveDuty.startTime;
+                document.getElementById('duty-timer').innerText = formatMs(diff);
             }, 1000);
-
-            // Aktualizacja statystyki liczby policjantów
-            document.getElementById('stats-total-sessions').textContent = "1";
         }
 
         function stopDuty() {
+            if (!currentActiveDuty) return;
+
             clearInterval(dutyInterval);
-            dutyInterval = null;
+            const durationMs = Date.now() - currentActiveDuty.startTime;
+            const totalSec = Math.floor(durationMs / 1000);
+            const badge = currentActiveDuty.badge;
 
-            const state = JSON.parse(localStorage.getItem('activeDutyState'));
-            localStorage.removeItem('activeDutyState');
-
-            // Formularz wraca do normy
-            dutyInactiveFormDiv.style.display = 'block';
-            dutyActivePanel.style.display = 'none';
-            dutyTimer.textContent = '00:00:00';
-
-            alert(`Służba zakończona. Przepracowano: ${Math.floor(dutySeconds / 60)} minut.`);
-            document.getElementById('stats-total-sessions').textContent = "0";
-            
-            // Zsumowanie i zapis w tabeli
-            saveDutyToArchive(state, dutySeconds);
-        }
-
-        function restoreDutyState() {
-            const saved = localStorage.getItem('activeDutyState');
-            if (saved) {
-                const state = JSON.parse(saved);
-                renderActiveDuty(state);
-            }
-            renderArchiveTable();
-        }
-
-        // ==========================================
-        //  ARCHIWUM GODZIN (ZAPIS I TABELA)
-        // ==========================================
-        function saveDutyToArchive(dutyState, seconds) {
-            let archive = JSON.parse(localStorage.getItem('dutyArchive')) || [];
-            
-            // Sprawdzamy czy ten funkcjonariusz już istnieje w archiwum
-            let officer = archive.find(o => o.badge === dutyState.badge);
-            if (officer) {
-                officer.totalSeconds += seconds;
-                officer.logins += 1;
-                officer.lastCar = `${dutyState.car} (${dutyState.plate})`;
-            } else {
-                archive.push({
-                    name: dutyState.name,
-                    badge: dutyState.badge,
-                    lastCar: `${dutyState.car} (${dutyState.plate})`,
-                    totalSeconds: seconds,
-                    logins: 1
-                });
+            if (!db.dutyHours[badge]) {
+                db.dutyHours[badge] = {
+                    officer: currentActiveDuty.officer,
+                    badge: badge,
+                    car: currentActiveDuty.car,
+                    totalSeconds: 0,
+                    logins: 0
+                };
             }
 
-            localStorage.setItem('dutyArchive', JSON.stringify(archive));
-            renderArchiveTable();
-        }
+            db.dutyHours[badge].totalSeconds += totalSec;
+            db.dutyHours[badge].logins += 1;
+            db.dutyHours[badge].car = currentActiveDuty.car;
 
-        function renderArchiveTable() {
-            const tableBody = document.getElementById('hours-table-body');
-            if(!tableBody) return;
+            saveData();
+            logSystem(`SŁUŻBA`, `Zakończono służbę: ${currentActiveDuty.officer}. Czas patrolu: ${formatMs(durationMs)}`);
             
-            const archive = JSON.parse(localStorage.getItem('dutyArchive')) || [];
+            sendDiscordWebhook("🛑 ZAKOŃCZONO SŁUŻBĘ / PATROL", `Funkcjonariusz **${currentActiveDuty.officer}** zakończył patrol i zdał sprzęt.`, 15158332, [
+                { name: "Czas trwania patrolu", value: formatMs(durationMs), inline: true },
+                { name: "Suma godzin w systemie", value: formatSeconds(db.dutyHours[badge].totalSeconds), inline: true }
+            ]);
+
+            currentActiveDuty = null;
+            document.getElementById('duty-timer').innerText = "00:00:00";
+            document.getElementById('duty-inactive-form').style.display = 'block';
+            document.getElementById('duty-active-panel').style.display = 'none';
+            document.getElementById('duty-activation-form').reset();
+
+            renderStats();
+            renderHoursTable();
+        }
+
+        // --- KARTOTEKA KSIP ---
+        function addCitizen(e) {
+            e.preventDefault();
+            const name = document.getElementById('cit-name').value;
+            const pesel = document.getElementById('cit-pesel').value;
+            const status = document.getElementById('cit-status').value;
+            const threat = document.getElementById('cit-threat').value;
+            const notes = document.getElementById('cit-notes').value || 'Brak uwag w bazie danych.';
+
+            const citizen = { name, pesel, status, threat, notes, date: new Date().toLocaleDateString('pl-PL') };
+            db.citizens.push(citizen);
+            saveData();
             
-            if(archive.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Brak zapisanych rekordów w bazie danych.</td></tr>`;
-                return;
-            }
+            logSystem(`KSIP`, `Wprowadzono obywatela: ${name} (PESEL: ${pesel})`);
+            
+            sendDiscordWebhook("👤 NOWY WPIS W REJESTRZE KSIP", `Zarejestrowano kartotekę nowego obywatela.`, 10181046, [
+                { name: "Obywatel", value: name, inline: true },
+                { name: "PESEL", value: pesel, inline: true },
+                { name: "Status KSIP", value: status, inline: true },
+                { name: "Stopień Zagrożenia", value: threat, inline: true },
+                { name: "Uwagi Operacyjne", value: notes, inline: false }
+            ]);
 
-            tableBody.innerHTML = '';
-            let globalSeconds = 0;
-
-            archive.forEach(item => {
-                globalSeconds += item.totalSeconds;
-                
-                const hrs = String(Math.floor(item.totalSeconds / 3600)).padStart(2, '0');
-                const mins = String(Math.floor((item.totalSeconds % 3600) / 60)).padStart(2, '0');
-                const secs = String(item.totalSeconds % 60).padStart(2, '0');
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${item.name}</strong></td>
-                    <td><span style="font-family:'JetBrains Mono';">${item.badge}</span></td>
-                    <td>${item.lastCar}</td>
-                    <td><strong>${hrs}:${mins}:${secs}</strong></td>
-                    <td>${item.logins}</td>
-                    <td><span style="color:var(--success); font-weight:bold;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> WOLNY</span></td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            // Aktualizacja sumy globalnej godzin w statystykach
-            const gHrs = String(Math.floor(globalSeconds / 3600)).padStart(2, '0');
-            const gMins = String(Math.floor((globalSeconds % 3600) / 60)).padStart(2, '0');
-            const gSecs = String(globalSeconds % 60).padStart(2, '0');
-            document.getElementById('stats-total-hours').textContent = `${gHrs}:${gMins}:${gSecs}`;
-        }
-
-        // ==========================================
-        //  REJESTR OBYWATELI I KSIP
-        // ==========================================
-        const citizenForm = document.getElementById('citizen-add-form');
-        if (citizenForm) {
-            citizenForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                const name = document.getElementById('cit-name').value;
-                const pesel = document.getElementById('cit-pesel').value;
-                const status = document.getElementById('cit-status').value;
-                const threat = document.getElementById('cit-threat').value;
-                const notes = document.getElementById('cit-notes').value;
-
-                let citizens = JSON.parse(localStorage.getItem('ksip_citizens')) || [];
-                
-                // Dodajemy nowego
-                citizens.push({ name, pesel, status, threat, notes });
-                localStorage.setItem('ksip_citizens', JSON.stringify(citizens));
-
-                alert('Dodano obywatela do bazy KSIP.');
-                citizenForm.reset();
-                updateStats();
-                searchCitizens();
-            });
-        }
-
-        function updateStats() {
-            const citizens = JSON.parse(localStorage.getItem('ksip_citizens')) || [];
-            document.getElementById('stats-total-citizens').textContent = citizens.length;
-        }
-
-        const searchInput = document.getElementById('cit-search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                searchCitizens();
-            });
+            document.getElementById('citizen-add-form').reset();
+            renderStats();
+            searchCitizens();
         }
 
         function searchCitizens() {
             const query = document.getElementById('cit-search-input').value.toLowerCase();
             const container = document.getElementById('cit-list-container');
-            const citizens = JSON.parse(localStorage.getItem('ksip_citizens')) || [];
-
             container.innerHTML = '';
-            
-            const filtered = citizens.filter(c => c.name.toLowerCase().includes(query) || c.pesel.includes(query));
 
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="info-strip">Brak dopasowań w bazie KSIP.</div>';
-                return;
-            }
+            if (query.length < 2) return;
+
+            const filtered = db.citizens.filter(c => c.name.toLowerCase().includes(query) || c.pesel.includes(query));
 
             filtered.forEach(c => {
-                let badgeClass = 'var(--success)';
-                if (c.status === 'NOTOWANY') badgeClass = 'orange';
-                if (c.status === 'POSZUKIWANY') badgeClass = 'var(--danger)';
+                let badgeClass = 'badge-clean';
+                if (c.status === 'NOTOWANY') badgeClass = 'badge-noted';
+                if (c.status === 'POSZUKIWANY') badgeClass = 'badge-wanted';
 
-                const div = document.createElement('div');
-                div.className = 'timeline-item';
-                div.innerHTML = `
-                    <div class="timeline-details">
-                        <strong>${c.name} (PESEL: ${c.pesel})</strong>
-                        <span style="font-size:11px; color: var(--text-normal)">Uwagi: ${c.notes || 'Brak wpisów'}</span>
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.innerHTML = `
+                    <div class="timeline-meta">
+                        <span style="font-weight: 800; font-size: 14px; color: #ffffff;">${c.name}</span>
+                        <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;">PESEL: ${c.pesel}</span>
+                        <span style="font-size: 11px; color: var(--text-normal); margin-top: 5px; max-width: 450px;">Opis: ${c.notes}</span>
                     </div>
-                    <div style="text-align:right;">
-                        <span style="background:${badgeClass}; color:white; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold;">${c.status}</span>
-                        <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">Zagrożenie: ${c.threat}</div>
+                    <div style="text-align: right;">
+                        <span class="status-badge ${badgeClass}">${c.status}</span>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">Zagrożenie: <strong>${c.threat}</strong></div>
                     </div>
                 `;
-                container.appendChild(div);
+                container.appendChild(item);
             });
         }
 
-        function searchOfficerHistory() {
-            const input = document.getElementById('officer-search-input').value;
-            const container = document.getElementById('officer-results-container');
-            if(!input) {
-                container.innerHTML = '<div class="info-strip" style="border-color: var(--danger); color: var(--danger);">Wprowadź poprawne dane!</div>';
-                return;
-            }
-            container.innerHTML = `<div class="info-strip">Brak wpisów o zatrzymaniach dla funkcjonariusza: ${input}.</div>`;
+        // --- TARYFIKATOR MANDATÓW ---
+        function renderTariff() {
+            const container = document.getElementById('tariff-list');
+            container.innerHTML = '';
+
+            TARIFF_DB.forEach(item => {
+                const el = document.createElement('div');
+                el.className = `ticket-item ${selectedTariffItems.includes(item.id) ? 'selected' : ''}`;
+                el.onclick = () => toggleTariffItem(item.id);
+                el.innerHTML = `
+                    <div>
+                        <strong style="display: block; font-size: 12px; color: white;">${item.text}</strong>
+                        <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">${item.category}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="color: var(--accent-cyan); display: block;">${item.fine} PLN</strong>
+                        <span style="color: var(--danger); font-size: 11px;">${item.points} pkt</span>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+            calculateTotals();
         }
 
-        // ==========================================
-        //  MODAL DOKUMENTÓW (NOTATKI / PROTOKOŁY)
-        // ==========================================
+        function filterTariff() {
+            const query = document.getElementById('tariff-search-input').value.toLowerCase();
+            const items = document.querySelectorAll('.ticket-item');
+            
+            TARIFF_DB.forEach((item, index) => {
+                const text = item.text.toLowerCase() + item.category.toLowerCase();
+                if (text.includes(query)) {
+                    items[index].style.display = 'flex';
+                } else {
+                    items[index].style.display = 'none';
+                }
+            });
+        }
+
+        function toggleTariffItem(id) {
+            if (selectedTariffItems.includes(id)) {
+                selectedTariffItems = selectedTariffItems.filter(itemId => itemId !== id);
+            } else {
+                selectedTariffItems.push(id);
+            }
+            renderTariff();
+        }
+
+        function calculateTotals() {
+            let totalFine = 0;
+            let totalPoints = 0;
+
+            selectedTariffItems.forEach(id => {
+                const item = TARIFF_DB.find(t => t.id === id);
+                if (item) {
+                    totalFine += item.fine;
+                    totalPoints += item.points;
+                }
+            });
+
+            document.getElementById('calc-total-fine').innerText = `${totalFine} PLN`;
+            document.getElementById('calc-total-points').innerText = `${totalPoints} pkt`;
+        }
+
+        function resetCalculator() {
+            selectedTariffItems = [];
+            renderTariff();
+        }
+
+        function transferToForm() {
+            if (selectedTariffItems.length === 0) {
+                alert("Wybierz najpierw pozycje z taryfikatora!");
+                return;
+            }
+
+            let totalFine = 0;
+            let totalPoints = 0;
+            let textList = [];
+
+            selectedTariffItems.forEach(id => {
+                const item = TARIFF_DB.find(t => t.id === id);
+                if (item) {
+                    totalFine += item.fine;
+                    totalPoints += item.points;
+                    textList.push(`- ${item.text} (${item.fine} PLN / ${item.points} pkt)`);
+                }
+            });
+
+            const description = `Wykroczenia ujęte w taryfikatorze:\n${textList.join('\n')}\n\nSUMARYCZNA KARA: ${totalFine} PLN oraz ${totalPoints} punktów karnych.`;
+            
+            // Przejście do widoku dokumentów i zmiana na szablon mandatu
+            switchDocTemplate('mandat');
+            document.getElementById('doc-reason').value = description;
+            
+            // Nawigacja do widoku dokumentów
+            document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('nav .nav-btn[data-target="dokumenty"]').classList.add('active');
+            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-dokumenty').classList.add('active');
+        }
+
+        // --- PROTOKOŁY / GENERATOR DOKUMENTÓW ---
+        function switchDocTemplate(template) {
+            activeDocTemplate = template;
+            const btns = ['zatrzymanie', 'kontrola', 'notatka', 'mandat'];
+            btns.forEach(b => {
+                document.getElementById(`btn-t-${b}`).classList.toggle('active', b === template);
+            });
+        }
+
+        function generateDocument(e) {
+            e.preventDefault();
+            const officer = document.getElementById('doc-officer').value;
+            const subject = document.getElementById('doc-subject').value;
+            const location = document.getElementById('doc-location').value;
+            const reason = document.getElementById('doc-reason').value;
+            const id = Date.now();
+
+            const doc = {
+                id,
+                template: activeDocTemplate,
+                officer,
+                subject,
+                location,
+                reason,
+                date: new Date().toLocaleString('pl-PL')
+            };
+
+            db.documents.push(doc);
+            saveData();
+
+            logSystem(`PROTOKÓŁ`, `Utworzono dokument (${activeDocTemplate.toUpperCase()}) dla: ${subject}`);
+            
+            sendDiscordWebhook("📝 NOWY DOKUMENT OPERACYJNY", `Wygenerowano i zatwierdzono nowy dokument w systemie.`, 1752220, [
+                { name: "Rodzaj Czynności", value: doc.template.toUpperCase(), inline: true },
+                { name: "Prowadzący Czynność", value: officer, inline: true },
+                { name: "Obywatel / Podejrzany", value: subject, inline: true },
+                { name: "Miejsce Zdarzenia", value: location, inline: true },
+                { name: "Opis Czynności / Powód", value: reason, inline: false }
+            ]);
+
+            document.getElementById('doc-generator-form').reset();
+            renderStats();
+            renderDocuments();
+        }
+
+        function renderDocuments() {
+            const container = document.getElementById('docs-list');
+            container.innerHTML = '';
+
+            db.documents.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.innerHTML = `
+                    <div class="timeline-meta">
+                        <span style="font-weight: 800; color: #ffffff;">${doc.template.toUpperCase()} - ${doc.subject}</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">${doc.date} | Miejsce: ${doc.location} | Sporządził: ${doc.officer}</span>
+                    </div>
+                    <button class="btn-ops btn-accent" onclick="viewDocument(${doc.id})"><i class="fa-solid fa-file-pdf"></i> Podgląd</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function viewDocument(id) {
+            const doc = db.documents.find(d => d.id === id);
+            if (!doc) return;
+
+            let title = "PROTOKÓŁ OPERACYJNY";
+            if (doc.template === 'zatrzymanie') title = "PROTOKÓŁ ZATRZYMANIA OSOBY";
+            if (doc.template === 'kontrola') title = "PROTOKÓŁ KONTROLI OSOBISTEJ";
+            if (doc.template === 'notatka') title = "NOTATKA URZĘDOWA";
+            if (doc.template === 'mandat') title = "PROTOKÓŁ NAŁOŻENIA MANDATU KARNEGO";
+
+            const content = `
+                <div class="a4-document-view">
+                    <div class="a4-header">
+                        <h2>KOMENDA STOŁECZNA POLICJI</h2>
+                        <p>CYFROWY REJESTR DOWODOWY ARCHIWALNEGO SYSTEMU KSP</p>
+                    </div>
+                    <div class="a4-section">
+                        <div class="a4-section-title">A. Dane Podmiotu i Czas Operacyjny</div>
+                        <div class="a4-meta-row">
+                            <div><strong>Czas rejestracji:</strong> ${doc.date}</div>
+                            <div><strong>Lokalizacja:</strong> ${doc.location}</div>
+                        </div>
+                        <strong>Funkcjonariusz sporządzający protokół:</strong> ${doc.officer}
+                    </div>
+                    <div class="a4-section">
+                        <div class="a4-section-title">B. Osoba Objeta Czynnością</div>
+                        <strong>Tożsamość / PESEL:</strong> ${doc.subject}
+                    </div>
+                    <div class="a4-section">
+                        <div class="a4-section-title">C. Szczegółowy Opis Przebiegu Czynności</div>
+                        <p style="white-space: pre-wrap; margin-top: 10px;">${doc.reason}</p>
+                    </div>
+                    <div class="signature-area">
+                        <div class="signature-placeholder">Czytelny podpis funkcjonariusza</div>
+                        <div class="signature-placeholder">Podpis osoby legitymowanej</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modal-doc-title').innerText = title;
+            document.getElementById('modal-doc-content').innerHTML = content;
+            document.getElementById('modal-del-btn').onclick = () => deleteDocument(id);
+            document.getElementById('ops-modal').style.display = 'flex';
+        }
+
         function closeOpsModal() {
             document.getElementById('ops-modal').style.display = 'none';
         }
 
-        // ==========================================
-        //  INIT ROZRUCHOWY
-        // ==========================================
-        window.addEventListener('DOMContentLoaded', () => {
-            // Sprawdzenie stanu logowania Discord na starcie
-            checkDiscordCallback();
-            updateStats();
-        });
+        function deleteDocument(id) {
+            if (confirm("Czy chcesz bezpowrotnie usunąć ten protokół z centralnego archiwum KSP?")) {
+                db.documents = db.documents.filter(d => d.id !== id);
+                saveData();
+                closeOpsModal();
+                renderDocuments();
+                renderStats();
+                logSystem(`ARCHIWUM`, `Usunięto z bazy dokument ID: ${id}`);
+            }
+        }
+
+        // --- POMOCNICZE / ZAPISYWANIE DANYCH ---
+        function saveData() {
+            localStorage.setItem('ksp_v7_citizens', JSON.stringify(db.citizens));
+            localStorage.setItem('ksp_v7_duty', JSON.stringify(db.dutyHours));
+            localStorage.setItem('ksp_v7_documents', JSON.stringify(db.documents));
+            localStorage.setItem('ksp_v7_logs', JSON.stringify(db.logs));
+        }
+
+        function logSystem(tag, msg) {
+            const now = new Date().toLocaleTimeString('pl-PL');
+            db.logs.unshift({ time: now, tag, msg });
+            if (db.logs.length > 80) db.logs.pop();
+            saveData();
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const containers = ['shift-logs-container', 'dashboard-logs'];
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = '';
+                db.logs.forEach(log => {
+                    let tagClass = 'info';
+                    if (log.tag === 'SŁUŻBA') tagClass = 'success';
+                    if (log.tag === 'KSIP') tagClass = 'warning';
+                    if (log.tag === 'ARCHIWUM') tagClass = 'danger';
+
+                    const line = document.createElement('div');
+                    line.className = 'log-line';
+                    line.innerHTML = `<span class="log-timestamp">[${log.time}]</span><span class="log-tag ${tagClass}">${log.tag}</span><span>${log.msg}</span>`;
+                    el.appendChild(line);
+                });
+            });
+        }
+
+        function renderStats() {
+            let totalSecs = 0;
+            Object.values(db.dutyHours).forEach(u => totalSecs += u.totalSeconds);
+            document.getElementById('stats-total-hours').innerText = formatSeconds(totalSecs);
+            document.getElementById('stats-total-officers').innerText = Object.keys(db.dutyHours).length;
+            document.getElementById('stats-total-citizens').innerText = db.citizens.length;
+            document.getElementById('stats-total-docs').innerText = db.documents.length;
+        }
+
+        function renderHoursTable() {
+            const tbody = document.getElementById('hours-table-body');
+            tbody.innerHTML = '';
+
+            Object.values(db.dutyHours).forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: bold; color: white;">${u.officer}</td>
+                    <td><code style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--accent-cyan);">${u.badge}</code></td>
+                    <td>${u.car}</td>
+                    <td style="font-weight: bold; color: var(--accent-blue);">${formatSeconds(u.totalSeconds)}</td>
+                    <td>${u.logins}</td>
+                    <td><span class="status-badge badge-clean">ZDAŁ PATROL</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function formatMs(ms) {
+            const totalSecs = Math.floor(ms / 1000);
+            return formatSeconds(totalSecs);
+        }
+
+        function formatSeconds(totalSecs) {
+            const h = Math.floor(totalSecs / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSecs % 3600) / 60).toString().padStart(2, '0');
+            const s = (totalSecs % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
     </script>
 </body>
 </html>
