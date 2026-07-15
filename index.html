@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KSP - Cyfrowy Terminal Operacyjny v7.0</title>
+    <title>KSP - Cyfrowy Terminal Operacyjny v7.2</title>
     
     <!-- Zewnętrzne biblioteki: Ikony i Czcionki -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -41,7 +41,7 @@
             scrollbar-color: var(--border) var(--bg-main);
         }
 
-        /* Stylizacja scrollbara dla Webkit */
+        /* Stylizacja scrollbara */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -124,7 +124,7 @@
 
         /* --- GŁÓWNY UKŁAD APLIKACJI --- */
         #app-container {
-            display: none; /* Domyślnie ukryty do momentu autoryzacji */
+            display: none;
             flex-direction: column;
             height: 100vh;
         }
@@ -518,6 +518,37 @@
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
 
+        /* --- GRUPA PRZYCISKÓW SZABLONÓW --- */
+        .template-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: rgba(31, 41, 55, 0.3);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .template-btn-group .btn-ops {
+            flex: 1;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+        }
+
+        .template-btn-group .btn-ops:hover {
+            background: rgba(55, 65, 81, 0.3);
+            color: white;
+        }
+
+        .template-btn-group .btn-ops.active {
+            background: var(--police-blue);
+            border-color: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+        }
+
         /* --- KONSOLA LOGÓW SYSTEMOWYCH --- */
         .terminal-log-box {
             background: #030712;
@@ -691,7 +722,7 @@
         .modal-body {
             padding: 30px;
             overflow-y: auto;
-            background: #f3f4f6; /* Symulacja jasnej kartki papieru dla podglądu dokumentu */
+            background: #f3f4f6;
         }
 
         .modal-footer {
@@ -855,7 +886,7 @@
                 <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Godło KSP">
                 <div class="brand-text">
                     <h1>KOMENDA STOŁECZNA POLICJI</h1>
-                    <span>SYSTEM OPERACYJNY TACTICAL-BLUE v7.0</span>
+                    <span>SYSTEM OPERACYJNY TACTICAL-BLUE v7.2</span>
                 </div>
             </div>
 
@@ -878,7 +909,7 @@
                 <button class="btn-ops" onclick="logoutSystem()" style="padding: 8px 14px; font-size: 11px;"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</button>
                 <div class="system-clock">
                     <div id="clock-t" class="clock-time">00:00:00</div>
-                    <div id="clock-d" class="clock-date">01 STYCZNIA 2026</div>
+                    <div id="clock-d" class="clock-date">15 LIPCA 2026</div>
                 </div>
             </div>
         </header>
@@ -897,7 +928,7 @@
                     <div class="stat-widget">
                         <div class="stat-icon-wrapper"><i class="fa-solid fa-shield-halved"></i></div>
                         <div class="stat-data">
-                            <h3>Liczba Funkcjonariuszy</h3>
+                            <h3>Liczba Funkcjonarii</h3>
                             <p id="stats-total-officers">0</p>
                         </div>
                     </div>
@@ -955,7 +986,7 @@
                                 <div class="grid-2">
                                     <div class="form-group">
                                         <label>Nazwisko i Imię Funkcjonariusza</label>
-                                        <input type="text" id="duty-officer-name" class="input-tactical" placeholder="np. Kowalski Jan" required>
+                                        <input type="text" id="duty-officer-name" class="input-tactical" placeholder="np. asp. szt. Jan Kowalski" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Numer Legitymacji / Odznaki</label>
@@ -1117,8 +1148,8 @@
                                 </div>
                             </div>
                             <div>
-                                <button class="btn-ops btn-accent" style="width: 100%; justify-content: center; margin-bottom: 10px;" onclick="transferToForm()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Przenieś do protokołu</button>
-                                <button class="btn-ops" style="width: 100%; justify-content: center;" onclick="resetCalculator()"><i class="fa-solid fa-arrow-rotate-left"></i> Wyczyść zaznaczenia</button>
+                                <button type="button" class="btn-ops btn-accent" style="width: 100%; justify-content: center; margin-bottom: 10px;" onclick="transferToForm()"><i class="fa-solid fa-arrow-right-to-bracket"></i> Przenieś do protokołu</button>
+                                <button type="button" class="btn-ops" style="width: 100%; justify-content: center;" onclick="resetCalculator()"><i class="fa-solid fa-arrow-rotate-left"></i> Wyczyść zaznaczenia</button>
                             </div>
                         </div>
                     </div>
@@ -1132,11 +1163,12 @@
                         <span class="card-title-tactical"><i class="fa-solid fa-file-pen"></i> Generator Oficjalnych Protokołów</span>
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 25px;">
-                        <button class="btn-ops active" id="btn-t-zatrzymanie" onclick="switchDocTemplate('zatrzymanie')">Protokół Zatrzymania</button>
-                        <button class="btn-ops" id="btn-t-kontrola" onclick="switchDocTemplate('kontrola')">Protokół Kontroli Osobistej</button>
-                        <button class="btn-ops" id="btn-t-notatka" onclick="switchDocTemplate('notatka')">Notatka Urzędowa</button>
-                        <button class="btn-ops" id="btn-t-mandat" onclick="switchDocTemplate('mandat')">Mandat Karny</button>
+                    <!-- Poprawiona grupa przycisków: dodano type="button", aby nie odpalały submit() formularza -->
+                    <div class="template-btn-group">
+                        <button type="button" class="btn-ops active" id="btn-t-zatrzymanie" onclick="switchDocTemplate('zatrzymanie')">Protokół Zatrzymania</button>
+                        <button type="button" class="btn-ops" id="btn-t-kontrola" onclick="switchDocTemplate('kontrola')">Protokół Kontroli Osobistej</button>
+                        <button type="button" class="btn-ops" id="btn-t-notatka" onclick="switchDocTemplate('notatka')">Notatka Urzędowa</button>
+                        <button type="button" class="btn-ops" id="btn-t-mandat" onclick="switchDocTemplate('mandat')">Mandat Karny</button>
                     </div>
 
                     <form id="doc-generator-form" onsubmit="generateDocument(event)">
@@ -1152,6 +1184,20 @@
                             <div class="form-group">
                                 <label>Miejsce Przeprowadzenia Czynności</label>
                                 <input type="text" id="doc-location" class="input-tactical" placeholder="np. Warszawa, Al. Jerozolimskie" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Status Czynności / Sygnatura</label>
+                                <select id="doc-status" class="input-tactical">
+                                    <option value="W toku">W toku (Wymaga zatwierdzenia przez KP)</option>
+                                    <option value="Zatwierdzony">Zatwierdzony (Zakończony w trybie natychmiastowym)</option>
+                                    <option value="Do wyjaśnienia">Do wyjaśnienia (Oczekuje na wydział kontrolny)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Użyte środki przymusu (ŚPB)</label>
+                                <input type="text" id="doc-spb" class="input-tactical" placeholder="np. kajdanki, siła fizyczna, brak">
                             </div>
                         </div>
                         <div class="form-group">
@@ -1234,7 +1280,7 @@
             renderTariff();
         };
 
-        // --- SYSTEM LOGOWANIA DISCORD OAUTH2 ---
+        // --- SYSTEM AUTORYZACJI DISCORD ---
         function loginWithDiscord() {
             const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
             const scope = encodeURIComponent('identify guilds guilds.members.read');
@@ -1253,10 +1299,9 @@
             }
 
             localStorage.setItem('ksp_v7_discord_token', accessToken);
-            window.location.hash = ''; // Czyszczenie paska adresu URL
+            window.location.hash = '';
 
             try {
-                // Pobranie profilu użytkownika Discord
                 const userRes = await fetch('https://discord.com/api/users/@me', {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
@@ -1264,7 +1309,6 @@
                 if (!userRes.ok) throw new Error('Nieudany odczyt profilu z sesji Discord. Spróbuj zalogować się ponownie.');
                 currentUser = await userRes.json();
 
-                // Sprawdzenie obecności użytkownika na serwerze i weryfikacja wymaganej roli
                 const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
@@ -1280,15 +1324,16 @@
                     throw new Error('Dostęp zablokowany: Twoje konto Discord nie posiada roli służbowej!');
                 }
 
-                // Autoryzacja zakończona sukcesem - schowanie overlay i wyświetlenie aplikacji
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('app-container').style.display = 'flex';
                 
-                // Uzupełnienie danych profilu użytkownika
                 const avatarUrl = currentUser.avatar ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png';
                 document.getElementById('user-avatar').src = avatarUrl;
                 document.getElementById('user-tag').innerText = `${currentUser.username}`;
                 
+                // Domyślne uzupełnienie sporządzającego na podstawie loginu Discord
+                document.getElementById('doc-officer').value = currentUser.username;
+
                 logSystem(`AUTORYZACJA`, `Zalogowano użytkownika Discord: ${currentUser.username}`);
                 sendDiscordWebhook("🔐 ZALOGOWANO DO TERMINALU KSP", `Użytkownik **${currentUser.username}** (ID: ${currentUser.id}) pomyślnie uwierzytelnił się w systemie.`);
 
@@ -1319,7 +1364,7 @@
                     color: color,
                     fields: fields,
                     timestamp: new Date().toISOString(),
-                    footer: { text: "Cyfrowy Terminal Operacyjny KSP v7.0" }
+                    footer: { text: "Cyfrowy Terminal Operacyjny KSP v7.2" }
                 }]
             };
 
@@ -1338,7 +1383,7 @@
             document.getElementById('clock-d').innerText = now.toLocaleDateString('pl-PL', options).toUpperCase();
         }
 
-        // --- SYSTEM NAVI ---
+        // --- NAWIGACJA ---
         function setupNavigation() {
             document.querySelectorAll('nav .nav-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1352,7 +1397,7 @@
             });
         }
 
-        // --- REJESTR SŁUŻBY I TIMERA ---
+        // --- SŁUŻBA I PATROL ---
         function startDuty(e) {
             e.preventDefault();
             const officer = document.getElementById('duty-officer-name').value;
@@ -1375,6 +1420,9 @@
                 <strong>Radiowóz:</strong> ${car} [${plate}] (Stan licznika: ${mileage} km)<br>
                 <strong>Zabezpieczone uzbrojenie:</strong> ${weapon}
             `;
+
+            // Automatyczne ustawienie sporządzającego w zakładce generatora dokumentów
+            document.getElementById('doc-officer').value = `${officer} (odznaka: ${badge})`;
 
             logSystem(`SŁUŻBA`, `Rozpoczęto służbę: ${officer} [Odznaka: ${badge}]`);
             
@@ -1425,6 +1473,9 @@
             document.getElementById('duty-inactive-form').style.display = 'block';
             document.getElementById('duty-active-panel').style.display = 'none';
             document.getElementById('duty-activation-form').reset();
+
+            // Przywrócenie domyślnej nazwy z konta Discord
+            document.getElementById('doc-officer').value = currentUser ? currentUser.username : '';
 
             renderStats();
             renderHoursTable();
@@ -1578,23 +1629,25 @@
 
             const description = `Wykroczenia ujęte w taryfikatorze:\n${textList.join('\n')}\n\nSUMARYCZNA KARA: ${totalFine} PLN oraz ${totalPoints} punktów karnych.`;
             
-            // Przejście do widoku dokumentów i zmiana na szablon mandatu
             switchDocTemplate('mandat');
             document.getElementById('doc-reason').value = description;
             
-            // Nawigacja do widoku dokumentów
+            // Nawigacja
             document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelector('nav .nav-btn[data-target="dokumenty"]').classList.add('active');
             document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
             document.getElementById('view-dokumenty').classList.add('active');
         }
 
-        // --- PROTOKOŁY / GENERATOR DOKUMENTÓW ---
+        // --- SEKCJA GENERATORA PROTOKOŁÓW ---
         function switchDocTemplate(template) {
             activeDocTemplate = template;
             const btns = ['zatrzymanie', 'kontrola', 'notatka', 'mandat'];
             btns.forEach(b => {
-                document.getElementById(`btn-t-${b}`).classList.toggle('active', b === template);
+                const btnElement = document.getElementById(`btn-t-${b}`);
+                if (btnElement) {
+                    btnElement.classList.toggle('active', b === template);
+                }
             });
         }
 
@@ -1604,32 +1657,49 @@
             const subject = document.getElementById('doc-subject').value;
             const location = document.getElementById('doc-location').value;
             const reason = document.getElementById('doc-reason').value;
+            const status = document.getElementById('doc-status').value;
+            const spb = document.getElementById('doc-spb').value || "nie użyto";
             const id = Date.now();
+            const randomSerial = "KSP/" + Math.floor(100000 + Math.random() * 900000) + "/26";
 
             const doc = {
                 id,
+                serial: randomSerial,
                 template: activeDocTemplate,
                 officer,
                 subject,
                 location,
                 reason,
+                status,
+                spb,
                 date: new Date().toLocaleString('pl-PL')
             };
 
             db.documents.push(doc);
             saveData();
 
-            logSystem(`PROTOKÓŁ`, `Utworzono dokument (${activeDocTemplate.toUpperCase()}) dla: ${subject}`);
+            logSystem(`PROTOKÓŁ`, `Utworzono dokument [${randomSerial}] (${activeDocTemplate.toUpperCase()}) dla: ${subject}`);
             
             sendDiscordWebhook("📝 NOWY DOKUMENT OPERACYJNY", `Wygenerowano i zatwierdzono nowy dokument w systemie.`, 1752220, [
+                { name: "Sygnatura", value: randomSerial, inline: true },
                 { name: "Rodzaj Czynności", value: doc.template.toUpperCase(), inline: true },
-                { name: "Prowadzący Czynność", value: officer, inline: true },
-                { name: "Obywatel / Podejrzany", value: subject, inline: true },
-                { name: "Miejsce Zdarzenia", value: location, inline: true },
-                { name: "Opis Czynności / Powód", value: reason, inline: false }
+                { name: "Status sprawy", value: status, inline: true },
+                { name: "Prowadzący", value: officer, inline: true },
+                { name: "Obywatel", value: subject, inline: true },
+                { name: "Użyte ŚPB", value: spb, inline: true },
+                { name: "Lokalizacja", value: location, inline: true },
+                { name: "Opis Czynności", value: reason, inline: false }
             ]);
 
             document.getElementById('doc-generator-form').reset();
+            
+            // Przywrócenie domyślnych danych po czyszczeniu formularza
+            if (currentActiveDuty) {
+                document.getElementById('doc-officer').value = `${currentActiveDuty.officer} (odznaka: ${currentActiveDuty.badge})`;
+            } else if (currentUser) {
+                document.getElementById('doc-officer').value = currentUser.username;
+            }
+
             renderStats();
             renderDocuments();
         }
@@ -1643,8 +1713,9 @@
                 item.className = 'timeline-item';
                 item.innerHTML = `
                     <div class="timeline-meta">
-                        <span style="font-weight: 800; color: #ffffff;">${doc.template.toUpperCase()} - ${doc.subject}</span>
+                        <span style="font-weight: 800; color: #ffffff;">[${doc.serial || 'KSP/UP-652/26'}] ${doc.template.toUpperCase()} - ${doc.subject}</span>
                         <span style="font-size: 11px; color: var(--text-muted);">${doc.date} | Miejsce: ${doc.location} | Sporządził: ${doc.officer}</span>
+                        <span style="font-size: 11px; color: var(--accent-cyan);">Status: ${doc.status || 'Zatwierdzony'} | ŚPB: ${doc.spb || 'nie użyto'}</span>
                     </div>
                     <button class="btn-ops btn-accent" onclick="viewDocument(${doc.id})"><i class="fa-solid fa-file-pdf"></i> Podgląd</button>
                 `;
@@ -1666,7 +1737,7 @@
                 <div class="a4-document-view">
                     <div class="a4-header">
                         <h2>KOMENDA STOŁECZNA POLICJI</h2>
-                        <p>CYFROWY REJESTR DOWODOWY ARCHIWALNEGO SYSTEMU KSP</p>
+                        <p>CENTRALNE ARCHIWUM KSIP - SYGNATURA AKTI: ${doc.serial || 'KSP/SP/2026'}</p>
                     </div>
                     <div class="a4-section">
                         <div class="a4-section-title">A. Dane Podmiotu i Czas Operacyjny</div>
@@ -1674,7 +1745,9 @@
                             <div><strong>Czas rejestracji:</strong> ${doc.date}</div>
                             <div><strong>Lokalizacja:</strong> ${doc.location}</div>
                         </div>
-                        <strong>Funkcjonariusz sporządzający protokół:</strong> ${doc.officer}
+                        <strong>Funkcjonariusz sporządzający:</strong> ${doc.officer}<br>
+                        <strong>Status dokumentu:</strong> ${doc.status || 'Zatwierdzony'}<br>
+                        <strong>Zastosowane ŚPB:</strong> ${doc.spb || 'Brak'}
                     </div>
                     <div class="a4-section">
                         <div class="a4-section-title">B. Osoba Objeta Czynnością</div>
@@ -1682,7 +1755,7 @@
                     </div>
                     <div class="a4-section">
                         <div class="a4-section-title">C. Szczegółowy Opis Przebiegu Czynności</div>
-                        <p style="white-space: pre-wrap; margin-top: 10px;">${doc.reason}</p>
+                        <p style="white-space: pre-wrap; margin-top: 10px; font-family: inherit;">${doc.reason}</p>
                     </div>
                     <div class="signature-area">
                         <div class="signature-placeholder">Czytelny podpis funkcjonariusza</div>
@@ -1712,7 +1785,7 @@
             }
         }
 
-        // --- POMOCNICZE / ZAPISYWANIE DANYCH ---
+        // --- ZAPISYWANIE DANYCH ---
         function saveData() {
             localStorage.setItem('ksp_v7_citizens', JSON.stringify(db.citizens));
             localStorage.setItem('ksp_v7_duty', JSON.stringify(db.dutyHours));
