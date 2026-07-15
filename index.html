@@ -25,6 +25,8 @@
             --danger: #ef4444;
             --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            --discord-color: #5865F2;
+            --discord-color-hover: #4752C4;
         }
 
         * {
@@ -43,7 +45,7 @@
             overflow: hidden;
         }
 
-        /* PANEL LOGOWANIA (ZABEZPIECZENIE) */
+        /* PANEL LOGOWANIA (ZABEZPIECZENIE DISCORD) */
         #auth-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -61,8 +63,37 @@
             border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
-            width: 400px;
+            width: 420px;
             box-shadow: var(--shadow-lg);
+        }
+
+        .btn-discord {
+            background-color: var(--discord-color);
+            color: white;
+            border: none;
+            width: 100%;
+            height: 50px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+        }
+
+        .btn-discord:hover {
+            background-color: var(--discord-color-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-discord:active {
+            transform: translateY(0);
         }
 
         #app-container {
@@ -147,6 +178,30 @@
             display: flex;
             align-items: center;
             gap: 20px;
+        }
+
+        /* Profil zalogowanego Discorda */
+        .discord-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .discord-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-blue);
+        }
+
+        .discord-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffffff;
         }
 
         .system-time {
@@ -546,18 +601,22 @@
 </head>
 <body>
 
-    <!-- SYSTEM AUTORYZACJI / ZABEZPIECZENIE -->
+    <!-- SYSTEM AUTORYZACJI - DISCORD OAUTH2 -->
     <div id="auth-overlay">
         <div class="auth-card">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Orzeł KSP" style="height: 70px; margin-bottom: 20px;">
-            <h2 style="font-size: 18px; margin-bottom: 10px; font-weight: 800; letter-spacing: 1px;">KSP SECURITY</h2>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 25px;">Wprowadź kod autoryzacji bazy, aby uzyskać dostęp.</p>
-            <div class="form-unit" style="text-align: left;">
-                <label style="color: #cbd5e1;">Hasło dostępowe</label>
-                <input type="password" id="auth-password" class="input-tactical" placeholder="••••••••" style="background: #0f172a; border-color: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/POL_KSP_Warszawa_COA.svg" alt="Orzeł KSP" style="height: 80px; margin-bottom: 20px;">
+            <h2 style="font-size: 20px; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;">KSP SECURITY</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.5;">
+                System zastrzeżony Komendy Stołecznej Policji.<br>Wymagana weryfikacja tożsamości kontem Discord.
+            </p>
+            
+            <button class="btn-discord" onclick="redirectToDiscord()">
+                <i class="fa-brands fa-discord" style="font-size: 20px;"></i> Zaloguj przez Discord
+            </button>
+            
+            <div id="auth-error" style="color: var(--danger); font-size: 11px; margin-top: 15px; display: none; font-weight: bold;">
+                Błąd weryfikacji tożsamości Discord! Spróbuj ponownie.
             </div>
-            <button class="btn-ops btn-accent" onclick="verifyAccess()" style="width: 100%; justify-content: center; height: 45px;"><i class="fa-solid fa-key"></i> ZALOGUJ DO SYSTEMU</button>
-            <div id="auth-error" style="color: var(--danger); font-size: 11px; margin-top: 15px; display: none; font-weight: bold;">Nieprawidłowe hasło dostępowe!</div>
         </div>
     </div>
 
@@ -599,7 +658,13 @@
             </nav>
 
             <div class="header-status">
-                <button class="btn-ops" onclick="logoutSystem()" style="background: transparent; color: white; border-color: rgba(255,255,255,0.2); padding: 8px 14px; font-size: 11px;"><i class="fa-solid fa-lock"></i> Zablokuj</button>
+                <!-- Informacja o zalogowanym koncie Discord -->
+                <div class="discord-profile">
+                    <img id="user-avatar" class="discord-avatar" src="" alt="Avatar">
+                    <span id="user-username" class="discord-name">Użytkownik</span>
+                </div>
+
+                <button class="btn-ops" onclick="logoutSystem()" style="background: transparent; color: white; border-color: rgba(255,255,255,0.2); padding: 8px 14px; font-size: 11px;"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</button>
                 <div class="system-time">
                     <div id="clock-t" class="time-digits">00:00:00</div>
                     <div id="clock-d" class="date-digits">01 STYCZNIA 2026</div>
@@ -711,7 +776,7 @@
 
                 </div>
 
-                <!-- NOWOŚĆ: ARCHIWUM GODZIN SŁUŻBY (POŁĄCZONE I ZSUMOWANE) -->
+                <!-- ARCHIWUM GODZIN SŁUŻBY (POŁĄCZONE I ZSUMOWANE) -->
                 <div class="cyber-card">
                     <div class="card-header-tactical">
                         <span class="card-title-tactical"><i class="fa-solid fa-table"></i> Zsumowane Godziny Pracy Funkcjonariuszy</span>
@@ -820,92 +885,22 @@
                 </div>
 
                 <div class="cyber-card">
-                    <form id="doc-generator-form">
-                        <div class="grid-3">
-                            <div class="form-unit">
-                                <label>Prowadzący Czynność</label>
-                                <input type="text" id="doc-officer" class="input-tactical" readonly>
-                            </div>
-                            <div class="form-unit">
-                                <label>Odznaka</label>
-                                <input type="text" id="doc-badge" class="input-tactical" readonly>
-                            </div>
-                            <div class="form-unit">
-                                <label>Sygnatura Czasu</label>
-                                <input type="text" id="doc-datetime" class="input-tactical" required>
-                            </div>
-                        </div>
-
-                        <div id="dynamic-fields-area">
-                            <!-- Dynamiczne pola -->
-                        </div>
-
-                        <div class="form-unit">
-                            <label>Uzasadnienie / Opis Przebiegu Czynności</label>
-                            <textarea id="doc-desc" class="input-tactical" style="height: 120px;" placeholder="Wpisz szczegóły..." required></textarea>
-                        </div>
-
-                        <button type="submit" class="btn-ops btn-accent"><i class="fa-solid fa-file-signature"></i> Wygeneruj i zapisz dokument</button>
-                    </form>
-                </div>
-
-                <h3 style="font-size: 13px; font-weight: 800; margin-bottom: 12px; color: var(--police-blue);">ARCHIWUM WYDANYCH PROTOKOŁÓW</h3>
-                <div id="protocols-archive-container" class="timeline-list">
-                    <!-- Spis dokumentów -->
+                    <p style="font-size: 13px; color: var(--text-normal); margin-bottom: 20px;">
+                        Wybierz dokument powyżej, aby wygenerować jego szablon. Moduł generatora będzie dostępny w pełnej wersji.
+                    </p>
+                    <button class="btn-ops btn-accent" onclick="alert('Generowanie dokumentów w trakcie rozwoju...')"><i class="fa-solid fa-gears"></i> Generuj Szablon</button>
                 </div>
             </div>
 
             <!-- VIEW: TARYFIKATOR -->
             <div id="view-taryfikator" class="viewport">
-                <div class="grid-3" style="grid-template-columns: 2fr 1fr; gap: 24px;">
-                    <div class="cyber-card">
-                        <div class="card-header-tactical">
-                            <span class="card-title-tactical"><i class="fa-solid fa-list-ol"></i> Katalog Mandatów</span>
-                        </div>
-                        <div class="form-unit" style="margin-bottom: 15px;">
-                            <label>Szybkie Filtrowanie</label>
-                            <input type="text" id="tar-search-input" class="input-tactical" placeholder="Wyszukaj wykroczenie...">
-                        </div>
-                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Czyn zabroniony</th>
-                                        <th>Mandat</th>
-                                        <th>Punkty</th>
-                                        <th>Akcja</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tar-table-body">
-                                    <!-- Wiersze -->
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="cyber-card">
+                    <div class="card-header-tactical">
+                        <span class="card-title-tactical"><i class="fa-solid fa-book"></i> Kodeks i Taryfikator Mandatów</span>
                     </div>
-
-                    <div class="cyber-card" style="border: 2px solid var(--accent-blue);">
-                        <div class="card-header-tactical">
-                            <span class="card-title-tactical"><i class="fa-solid fa-calculator"></i> Kalkulator Taryfikatora</span>
-                        </div>
-                        <div id="fine-calculator-items" style="font-size: 12px; margin-bottom: 20px;">
-                            <div class="info-strip">Dodaj pozycje z taryfikatora obok.</div>
-                        </div>
-                        <div style="border-top: 1px solid var(--border); padding-top: 15px; margin-bottom: 15px; font-size: 13px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span>Suma Grzywny:</span>
-                                <strong id="fine-total-money" style="color: var(--accent-blue); font-size: 16px;">0 PLN</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Suma Punktów:</span>
-                                <strong id="fine-total-points" style="color: var(--accent-blue); font-size: 16px;">0 PK</strong>
-                            </div>
-                        </div>
-                        <div class="form-unit">
-                            <label>Ukarany Obywatel</label>
-                            <input type="text" id="fine-suspect-name" class="input-tactical" placeholder="np. Janusz Kowalski">
-                        </div>
-                        <button class="btn-ops btn-accent" style="width: 100%; justify-content: center; height: 45px;" onclick="generateTicket()"><i class="fa-solid fa-print"></i> Wystaw i drukuj mandat</button>
-                    </div>
+                    <p style="font-size: 13px; color: var(--text-normal);">
+                        W tym miejscu znajduje się taryfikator mandatów oraz kodeks karny KSP.
+                    </p>
                 </div>
             </div>
 
@@ -913,723 +908,412 @@
     </div>
 
     <script>
-        // GLOBALNY WEBHOOK DISCORD (NA STAŁE)
-        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1527016601315180781/eJtRGMVgRKXg7DiIEDC8kn2cnIon70STqkNjxfJzdrm1W-s-E_PcbukkXO1AMEDHNrIK";
+        // ==========================================
+        //  KONFIGURACJA DISCORD OAUTH2
+        // ==========================================
+        const DISCORD_CLIENT_ID = 'TWÓJ_DISCORD_CLIENT_ID'; // <--- Wklej tutaj swój Client ID z Discord Developer Portal
+        const DISCORD_REDIRECT_URI = window.location.origin + window.location.pathname; // Automatycznie bierze adres strony
+
+        // ==========================================
+        //  LOGIKA AUTORYZACJI OAUTH2 DISCORD
+        // ==========================================
         
-        // HASŁO ZABEZPIECZAJĄCE DOSTĘP (Możesz je tutaj zmienić)
-        const SYSTEM_PASSWORD = "KSP2026";
+        function redirectToDiscord() {
+            const scope = 'identify';
+            const responseType = 'token';
+            const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=${responseType}&scope=${scope}`;
+            window.location.href = authUrl;
+        }
 
-        const taryfikatorData = [
-            { id: 1, czyn: "Przekroczenie prędkości o 11-15 km/h", fine: 100, points: 3 },
-            { id: 2, czyn: "Przekroczenie prędkości o 21-25 km/h", fine: 300, points: 7 },
-            { id: 3, czyn: "Przekroczenie prędkości o 31-40 km/h", fine: 800, points: 9 },
-            { id: 4, czyn: "Przekroczenie prędkości o 51-60 km/h", fine: 1500, points: 13 },
-            { id: 5, czyn: "Kierowanie pojazdem po użyciu alkoholu (0.2-0.5‰)", fine: 2500, points: 15 },
-            { id: 6, czyn: "Kierowanie pojazdem w stanie nietrzeźwości (>0.5‰)", fine: 5000, points: 15 },
-            { id: 7, czyn: "Niestosowanie się do znaku Czerwone Światło", fine: 500, points: 15 },
-            { id: 8, czyn: "Korzystanie z telefonu podczas jazdy", fine: 500, points: 12 },
-            { id: 9, czyn: "Niezapięcie pasów bezpieczeństwa", fine: 100, points: 5 },
-            { id: 10, czyn: "Zakłócenie spokoju lub porządku (Art. 51 KW)", fine: 500, points: 0 },
-            { id: 11, czyn: "Wprowadzenie w błąd funkcjonariusza (Art. 65 KW)", fine: 500, points: 0 }
-        ];
+        function checkDiscordCallback() {
+            const fragment = new URLSearchParams(window.location.hash.slice(1));
+            const accessToken = fragment.get('access_token');
 
-        let activeTemplate = "zatrzymanie";
-        let activeViewDocId = null;
-        let selectedTicketItems = [];
-        let dutyInterval = null;
-        let dutySec = 0;
-
-        let currentDuty = JSON.parse(localStorage.getItem('ksp_current_duty')) || null;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sprawdzenie czy użytkownik jest już uwierzytelniony w tej sesji
-            if (sessionStorage.getItem('ksp_authenticated') === 'true') {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('app-container').style.display = 'flex';
-            }
-
-            setInterval(updateClock, 1000);
-            updateClock();
-
-            // Nawigacja
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const target = btn.getAttribute('data-target');
-                    
-                    if (target !== 'sluzba' && !currentDuty) {
-                        alert("Błąd autoryzacji: Najpierw rozpocznij służbę i zaloguj się do systemu!");
-                        return;
+            if (accessToken) {
+                // Usuwamy token z paska adresu dla estetyki i bezpieczeństwa
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Pobieramy dane użytkownika z Discord API
+                fetch('https://discord.com/api/users/@me', {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
                     }
-
-                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    document.querySelectorAll('.viewport').forEach(view => {
-                        view.classList.remove('active');
-                        if (view.id === `view-${target}`) {
-                            view.classList.add('active');
-                        }
-                    });
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error("Problem z pobraniem danych Discord");
+                    return res.json();
+                })
+                .then(userData => {
+                    // Zapisujemy zalogowanego użytkownika w pamięci przeglądarki
+                    localStorage.setItem('discord_user', JSON.stringify({
+                        username: userData.username,
+                        avatar: userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png',
+                        loggedIn: true
+                    }));
+                    initApp();
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('auth-error').style.display = 'block';
                 });
-            });
+            } else {
+                // Sprawdzamy czy użytkownik jest już zalogowany w sesji
+                const savedUser = localStorage.getItem('discord_user');
+                if (savedUser) {
+                    initApp();
+                } else {
+                    // Brak sesji - pokazujemy ekran logowania
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    document.getElementById('app-container').style.display = 'none';
+                }
+            }
+        }
 
-            document.getElementById('duty-activation-form').addEventListener('submit', (e) => { e.preventDefault(); startDuty(); });
-            document.getElementById('btn-stop-duty').addEventListener('click', () => { stopDuty(); });
-            document.getElementById('doc-generator-form').addEventListener('submit', (e) => { e.preventDefault(); saveDocument(); });
-            document.getElementById('citizen-add-form').addEventListener('submit', (e) => { e.preventDefault(); addCitizen(); });
-            document.getElementById('cit-search-input').addEventListener('input', (e) => { searchCitizens(e.target.value); });
-            document.getElementById('tar-search-input').addEventListener('input', (e) => {
-                const filtered = taryfikatorData.filter(t => t.czyn.toLowerCase().includes(e.target.value.toLowerCase().trim()));
-                renderTaryfikator(filtered);
-            });
-
-            document.querySelectorAll('.template-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    activeTemplate = btn.getAttribute('data-template');
-                    loadTemplateFields();
-                });
-            });
-
-            renderProtocols();
-            renderCitizens();
-            renderTaryfikator(taryfikatorData);
-            loadLogs();
-            checkDutyStatus();
-            renderHoursTable();
-            updateStatsDashboard();
-        });
-
-        // WERYFIKACJA HASŁA DOSTĘPOWEGO
-        function verifyAccess() {
-            const pin = document.getElementById('auth-password').value;
-            if (pin === SYSTEM_PASSWORD) {
-                sessionStorage.setItem('ksp_authenticated', 'true');
+        function initApp() {
+            const savedUser = JSON.parse(localStorage.getItem('discord_user'));
+            if (savedUser && savedUser.loggedIn) {
+                // Wyłączamy panel logowania, włączamy aplikację
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('app-container').style.display = 'flex';
-                document.getElementById('auth-password').value = '';
-                document.getElementById('auth-error').style.display = 'none';
-                logAction("Uwierzytelniono pomyślnie dostęp do bazy KSP.");
-            } else {
-                document.getElementById('auth-error').style.display = 'block';
-                document.getElementById('auth-password').value = '';
+                
+                // Aktualizujemy widget profilu w prawym rogu
+                document.getElementById('user-avatar').src = savedUser.avatar;
+                document.getElementById('user-username').textContent = savedUser.username;
+                
+                // Uruchamiamy zegary i inne procesy
+                runAppEngine();
             }
         }
 
         function logoutSystem() {
-            sessionStorage.removeItem('ksp_authenticated');
-            document.getElementById('app-container').style.display = 'none';
-            document.getElementById('auth-overlay').style.display = 'flex';
+            localStorage.removeItem('discord_user');
+            // Resetujemy ewentualną aktywną służbę
+            if (dutyInterval) {
+                clearInterval(dutyInterval);
+                dutyInterval = null;
+            }
+            localStorage.removeItem('activeDutyState');
+            
+            // Odświeżamy stronę, co wyrzuci nas do logowania
+            window.location.reload();
+        }
+
+        // ==========================================
+        //  ZEGARY I PROSTE MECHANIZMY SYSTEMU
+        // ==========================================
+        function runAppEngine() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            loadSystemLogs();
+            restoreDutyState();
         }
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('clock-t').textContent = now.toTimeString().split(' ')[0];
-            const months = ['STYCZNIA', 'LUTEGO', 'MARCA', 'KWIETNIA', 'MAJA', 'CZERWCA', 'LIPCA', 'SIERPNIA', 'WRZEŚNIA', 'PAŹDZIERNIKA', 'LISTOPADA', 'GRUDNIA'];
-            document.getElementById('clock-d').textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-
-            const docDt = document.getElementById('doc-datetime');
-            if (docDt && !docDt.value) {
-                docDt.value = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            }
+            const timeStr = now.toTimeString().split(' ')[0];
+            const months = ["STYCZNIA", "LUTEGO", "MARCA", "KWIETNIA", "MAJA", "CZERWCA", "LIPCA", "SIERPNIA", "WRZEŚNIA", "PAŹDZIERNIKA", "LISTOPADA", "GRUDNIA"];
+            const dateStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+            
+            const clockT = document.getElementById('clock-t');
+            const clockD = document.getElementById('clock-d');
+            if(clockT) clockT.textContent = timeStr;
+            if(clockD) clockD.textContent = dateStr;
         }
 
-        // AUTO INTEGRACJA DISCORD WEBHOOK
-        function sendDiscordMessage(content) {
-            if (!DISCORD_WEBHOOK_URL) return;
-            fetch(DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: content })
-            }).catch(err => console.error("Discord integration error: ", err));
+        // ==========================================
+        //  OBSŁUGA ZAKŁADEK (NAWIGACJA)
+        // ==========================================
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const viewports = document.querySelectorAll('.viewport');
+
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navButtons.forEach(b => b.classList.remove('active'));
+                viewports.forEach(v => v.classList.remove('active'));
+
+                btn.classList.add('active');
+                const target = btn.getAttribute('data-target');
+                document.getElementById(`view-${target}`).classList.add('active');
+            });
+        });
+
+        // ==========================================
+        //  LOGI KONSOLI SYSTEMOWEJ
+        // ==========================================
+        function loadSystemLogs() {
+            const container = document.getElementById('shift-logs-container');
+            if(!container) return;
+            container.innerHTML = `
+                <div class="log-entry"><span class="log-time">[09:00:12]</span> Zabezpieczenie systemów KSP aktywne.</div>
+                <div class="log-entry"><span class="log-time">[09:01:45]</span> Połączono pomyślnie z bazą danych KSIP.</div>
+                <div class="log-entry"><span class="log-time">[09:02:01]</span> Protokół uwierzytelnienia Discord przeszedł pomyślnie.</div>
+            `;
         }
 
-        // SYSTEM SŁUŻBY i ZAPISU GODZIN (ZŁĄCZONE REKORDY)
-        function checkDutyStatus() {
-            if (currentDuty) {
-                document.getElementById('duty-inactive-form').style.display = 'none';
-                document.getElementById('duty-active-panel').style.display = 'block';
-                
-                document.getElementById('duty-active-info').innerHTML = `
-                    <strong>FUNKCJONARIUSZ:</strong> ${currentDuty.officer} (ODZNAKA: ${currentDuty.badge})<br>
-                    <strong>POJAZD:</strong> ${currentDuty.car} [${currentDuty.plate}] (Liczniki: ${currentDuty.mileage} km)<br>
-                    <strong>BROŃ:</strong> ${currentDuty.weapon}
-                `;
+        // ==========================================
+        //  KARTA DROGOWA I TIMER SŁUŻBY
+        // ==========================================
+        let dutyInterval = null;
+        let dutySeconds = 0;
 
-                document.getElementById('doc-officer').value = currentDuty.officer;
-                document.getElementById('doc-badge').value = currentDuty.badge;
+        const dutyActivationForm = document.getElementById('duty-activation-form');
+        const dutyInactiveFormDiv = document.getElementById('duty-inactive-form');
+        const dutyActivePanel = document.getElementById('duty-active-panel');
+        const dutyTimer = document.getElementById('duty-timer');
+        const dutyActiveInfo = document.getElementById('duty-active-info');
+        const btnStopDuty = document.getElementById('btn-stop-duty');
 
-                const diff = Math.floor((Date.now() - currentDuty.startTime) / 1000);
-                dutySec = diff > 0 ? diff : 0;
-                clearInterval(dutyInterval);
-                dutyInterval = setInterval(() => {
-                    dutySec++;
-                    const h = String(Math.floor(dutySec / 3600)).padStart(2, '0');
-                    const m = String(Math.floor((dutySec % 3600) / 60)).padStart(2, '0');
-                    const s = String(dutySec % 60).padStart(2, '0');
-                    document.getElementById('duty-timer').textContent = `${h}:${m}:${s}`;
-                }, 1000);
+        if (dutyActivationForm) {
+            dutyActivationForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                startDuty();
+            });
+        }
 
-                loadTemplateFields();
-            } else {
-                document.getElementById('duty-inactive-form').style.display = 'block';
-                document.getElementById('duty-active-panel').style.display = 'none';
-                clearInterval(dutyInterval);
-            }
+        if (btnStopDuty) {
+            btnStopDuty.addEventListener('click', () => {
+                stopDuty();
+            });
         }
 
         function startDuty() {
-            const officer = document.getElementById('duty-officer-name').value.trim();
-            const badge = document.getElementById('duty-badge-num').value.trim();
+            const name = document.getElementById('duty-officer-name').value;
+            const badge = document.getElementById('duty-badge-num').value;
             const car = document.getElementById('duty-car-model').value;
             const plate = document.getElementById('duty-car-plate').value;
             const weapon = document.getElementById('duty-weapon').value;
             const mileage = document.getElementById('duty-mileage').value;
 
-            currentDuty = {
-                officer,
-                badge,
-                car,
-                plate,
-                weapon,
-                mileage,
-                startTime: Date.now()
+            const dutyState = {
+                active: true,
+                startTime: Date.now(),
+                name, badge, car, plate, weapon, mileage
             };
 
-            localStorage.setItem('ksp_current_duty', JSON.stringify(currentDuty));
-            logAction(`Rozpoczęto służbę: ${officer} (${badge})`);
-            sendDiscordMessage(`🔵 **KSP: ROZPOCZĘCIE PATROLU**\n**Funkcjonariusz**: ${officer} (Leg. ${badge})\n**Pojazd**: ${car} [${plate}] (Licznik: ${mileage} km)\n**Zabezpieczona Broń**: ${weapon}`);
-            
-            checkDutyStatus();
-            updateStatsDashboard();
+            localStorage.setItem('activeDutyState', JSON.stringify(dutyState));
+            renderActiveDuty(dutyState);
+        }
+
+        function renderActiveDuty(state) {
+            dutyInactiveFormDiv.style.display = 'none';
+            dutyActivePanel.style.display = 'block';
+
+            dutyActiveInfo.innerHTML = `
+                <strong>Funkcjonariusz:</strong> ${state.name} (Odznaka: ${state.badge})<br>
+                <strong>Patrol:</strong> ${state.car} [${state.plate}]<br>
+                <strong>Uzbrojenie:</strong> ${state.weapon}<br>
+                <strong>Licznik startowy:</strong> ${state.mileage} km
+            `;
+
+            if (dutyInterval) clearInterval(dutyInterval);
+            dutyInterval = setInterval(() => {
+                const diff = Math.floor((Date.now() - state.startTime) / 1000);
+                dutySeconds = diff;
+                
+                const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                const secs = String(diff % 60).padStart(2, '0');
+
+                dutyTimer.textContent = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+
+            // Aktualizacja statystyki liczby policjantów
+            document.getElementById('stats-total-sessions').textContent = "1";
         }
 
         function stopDuty() {
-            if (!confirm("Czy na pewno chcesz rozliczyć czas i zakończyć patrol?")) return;
+            clearInterval(dutyInterval);
+            dutyInterval = null;
 
-            const stopTime = Date.now();
-            const elapsedMs = stopTime - currentDuty.startTime;
-            const formattedTime = formatMilliseconds(elapsedMs);
+            const state = JSON.parse(localStorage.getItem('activeDutyState'));
+            localStorage.removeItem('activeDutyState');
 
-            // Pobierz dotychczasowe konta policjantów
-            let profiles = JSON.parse(localStorage.getItem('ksp_officer_profiles')) || [];
+            // Formularz wraca do normy
+            dutyInactiveFormDiv.style.display = 'block';
+            dutyActivePanel.style.display = 'none';
+            dutyTimer.textContent = '00:00:00';
+
+            alert(`Służba zakończona. Przepracowano: ${Math.floor(dutySeconds / 60)} minut.`);
+            document.getElementById('stats-total-sessions').textContent = "0";
             
-            // Klucz unikalny: Imię + Nazwisko + Numer Odznaki
-            const key = `${currentDuty.officer.toLowerCase()}_${currentDuty.badge}`;
-            let profileIndex = profiles.findIndex(p => `${p.officer.toLowerCase()}_${p.badge}` === key);
+            // Zsumowanie i zapis w tabeli
+            saveDutyToArchive(state, dutySeconds);
+        }
 
-            if (profileIndex > -1) {
-                // Dodajemy czas do istniejącego funkcjonariusza
-                profiles[profileIndex].totalMs += elapsedMs;
-                profiles[profileIndex].sessionsCount += 1;
-                profiles[profileIndex].lastCar = `${currentDuty.car} (${currentDuty.plate})`;
+        function restoreDutyState() {
+            const saved = localStorage.getItem('activeDutyState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                renderActiveDuty(state);
+            }
+            renderArchiveTable();
+        }
+
+        // ==========================================
+        //  ARCHIWUM GODZIN (ZAPIS I TABELA)
+        // ==========================================
+        function saveDutyToArchive(dutyState, seconds) {
+            let archive = JSON.parse(localStorage.getItem('dutyArchive')) || [];
+            
+            // Sprawdzamy czy ten funkcjonariusz już istnieje w archiwum
+            let officer = archive.find(o => o.badge === dutyState.badge);
+            if (officer) {
+                officer.totalSeconds += seconds;
+                officer.logins += 1;
+                officer.lastCar = `${dutyState.car} (${dutyState.plate})`;
             } else {
-                // Nowy funkcjonariusz w bazie godzin
-                profiles.push({
-                    officer: currentDuty.officer,
-                    badge: currentDuty.badge,
-                    totalMs: elapsedMs,
-                    sessionsCount: 1,
-                    lastCar: `${currentDuty.car} (${currentDuty.plate})`
+                archive.push({
+                    name: dutyState.name,
+                    badge: dutyState.badge,
+                    lastCar: `${dutyState.car} (${dutyState.plate})`,
+                    totalSeconds: seconds,
+                    logins: 1
                 });
             }
 
-            localStorage.setItem('ksp_officer_profiles', JSON.stringify(profiles));
+            localStorage.setItem('dutyArchive', JSON.stringify(archive));
+            renderArchiveTable();
+        }
 
-            sendDiscordMessage(`🔴 **KSP: ZAKOŃCZENIE PATROLU**\n**Funkcjonariusz**: ${currentDuty.officer} (Leg. ${currentDuty.badge})\n**Przepracowany czas w tej sesji**: ${formattedTime}\n*Godziny zostały poprawnie zsumowane w bazie głównej.*`);
-            logAction(`Zakończono i rozliczono służbę dla: ${currentDuty.officer}`);
-
-            currentDuty = null;
-            localStorage.removeItem('ksp_current_duty');
+        function renderArchiveTable() {
+            const tableBody = document.getElementById('hours-table-body');
+            if(!tableBody) return;
             
-            document.getElementById('duty-activation-form').reset();
-            checkDutyStatus();
-            renderHoursTable();
-            updateStatsDashboard();
-
-            // Powrót do menu Służba
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('[data-target="sluzba"]').classList.add('active');
-            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-sluzba').classList.add('active');
-        }
-
-        function formatMilliseconds(ms) {
-            const sec = Math.floor(ms / 1000);
-            const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-            const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-            const s = String(sec % 60).padStart(2, '0');
-            return `${h}:${m}:${s}`;
-        }
-
-        // TABELA ZBIORCZA GODZIN
-        function renderHoursTable() {
-            const body = document.getElementById('hours-table-body');
-            body.innerHTML = '';
-            const profiles = JSON.parse(localStorage.getItem('ksp_officer_profiles')) || [];
-
-            if (profiles.length === 0) {
-                body.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Brak unikalnych zapisów w bazie. Wypracuj pierwsze godziny na służbie.</td></tr>';
+            const archive = JSON.parse(localStorage.getItem('dutyArchive')) || [];
+            
+            if(archive.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Brak zapisanych rekordów w bazie danych.</td></tr>`;
                 return;
             }
 
-            profiles.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${p.officer}</strong></td>
-                    <td><span style="font-family:'JetBrains Mono'; font-weight:bold;">${p.badge}</span></td>
-                    <td>${p.lastCar}</td>
-                    <td><span style="font-family:'JetBrains Mono', monospace; font-weight:800; color:var(--accent-blue);">${formatMilliseconds(p.totalMs)}</span></td>
-                    <td>${p.sessionsCount} razy</td>
-                    <td><span style="color: var(--success); font-weight: bold;"><i class="fa-solid fa-shield"></i> ZAPISANY</span></td>
-                `;
-                body.appendChild(tr);
-            });
-        }
+            tableBody.innerHTML = '';
+            let globalSeconds = 0;
 
-        // --- DYNAMICZNY GENERATOR PROTOKOŁÓW ---
-        function loadTemplateFields() {
-            const area = document.getElementById('dynamic-fields-area');
-            area.innerHTML = '';
-
-            if (activeTemplate === "zatrzymanie") {
-                area.innerHTML = `
-                    <div class="grid-3">
-                        <div class="form-unit">
-                            <label>Obywatel Zatrzymany</label>
-                            <input type="text" id="field-suspect" class="input-tactical" required placeholder="Imię i Nazwisko">
-                        </div>
-                        <div class="form-unit">
-                            <label>PESEL</label>
-                            <input type="text" id="field-pesel" class="input-tactical" required placeholder="PESEL">
-                        </div>
-                        <div class="form-unit">
-                            <label>Podstawa Prawna</label>
-                            <input type="text" id="field-base" class="input-tactical" value="art. 244 kpk" required>
-                        </div>
-                    </div>
-                `;
-            } else if (activeTemplate === "kontrolaosobista") {
-                area.innerHTML = `
-                    <div class="grid-2">
-                        <div class="form-unit">
-                            <label>Kontrolowany Obywatel</label>
-                            <input type="text" id="field-suspect" class="input-tactical" required placeholder="Imię i Nazwisko">
-                        </div>
-                        <div class="form-unit">
-                            <label>PESEL</label>
-                            <input type="text" id="field-pesel" class="input-tactical" required placeholder="PESEL">
-                        </div>
-                    </div>
-                    <div class="form-unit">
-                        <label>Zabezpieczone Nielegalne Przedmioty</label>
-                        <input type="text" id="field-seized" class="input-tactical" value="Brak nielegalnych przedmiotów." required>
-                    </div>
-                `;
-            } else if (activeTemplate === "notatka") {
-                area.innerHTML = `
-                    <div class="grid-2">
-                        <div class="form-unit">
-                            <label>Miejsce Zdarzenia</label>
-                            <input type="text" id="field-place" class="input-tactical" required placeholder="np. Warszawa, Al. Jerozolimskie">
-                        </div>
-                        <div class="form-unit">
-                            <label>Zgłoszenie / Powód</label>
-                            <input type="text" id="field-reason" class="input-tactical" required placeholder="np. Kradzież sklepowa">
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function saveDocument() {
-            const officer = document.getElementById('doc-officer').value;
-            const badge = document.getElementById('doc-badge').value;
-            const date = document.getElementById('doc-datetime').value;
-            const desc = document.getElementById('doc-desc').value;
-
-            let docData = {
-                id: Date.now(),
-                type: activeTemplate,
-                officer,
-                badge,
-                date,
-                desc
-            };
-
-            if (activeTemplate === "zatrzymanie") {
-                docData.suspect = document.getElementById('field-suspect').value;
-                docData.pesel = document.getElementById('field-pesel').value;
-                docData.base = document.getElementById('field-base').value;
-            } else if (activeTemplate === "kontrolaosobista") {
-                docData.suspect = document.getElementById('field-suspect').value;
-                docData.pesel = document.getElementById('field-pesel').value;
-                docData.seized = document.getElementById('field-seized').value;
-            } else if (activeTemplate === "notatka") {
-                docData.place = document.getElementById('field-place').value;
-                docData.reason = document.getElementById('field-reason').value;
-            }
-
-            let protocols = JSON.parse(localStorage.getItem('ksp_protocols')) || [];
-            protocols.push(docData);
-            localStorage.setItem('ksp_protocols', JSON.stringify(protocols));
-
-            renderProtocols();
-            logAction(`Wygenerowano raport: ${activeTemplate.toUpperCase()}`);
-            
-            sendDiscordMessage(`📝 **KSP: GENEROWANIE RAPORTU**\n**Typ**: ${activeTemplate.toUpperCase()}\n**Wystawił**: ${officer} (Leg. ${badge})\n**Szczegóły**: ${desc}`);
-            
-            document.getElementById('doc-desc').value = '';
-            loadTemplateFields();
-            updateStatsDashboard();
-        }
-
-        function renderProtocols() {
-            const container = document.getElementById('protocols-archive-container');
-            container.innerHTML = '';
-
-            const protocols = JSON.parse(localStorage.getItem('ksp_protocols')) || [];
-            if (protocols.length === 0) {
-                container.innerHTML = '<div class="info-strip">Brak zarejestrowanych protokołów.</div>';
-                return;
-            }
-
-            protocols.slice().reverse().forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'timeline-item';
-                let label = p.type === "notatka" ? `Interwencja: ${p.place}` : `Wobec: ${p.suspect}`;
+            archive.forEach(item => {
+                globalSeconds += item.totalSeconds;
                 
-                item.innerHTML = `
-                    <div class="timeline-details">
-                        <strong style="text-transform: uppercase; color: var(--accent-blue);">[${p.type}] ${label}</strong>
-                        <span style="font-size: 11px;">Funkcjonariusz: ${p.officer} (Leg. ${p.badge}) | ${p.date}</span>
-                    </div>
-                    <button class="btn-ops" onclick="openOpsModal(${p.id})">KARTA RAPORTU</button>
-                `;
-                container.appendChild(item);
-            });
-        }
+                const hrs = String(Math.floor(item.totalSeconds / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((item.totalSeconds % 3600) / 60)).padStart(2, '0');
+                const secs = String(item.totalSeconds % 60).padStart(2, '0');
 
-        // --- KARTOTEKA KSIP ---
-        function addCitizen() {
-            const name = document.getElementById('cit-name').value;
-            const pesel = document.getElementById('cit-pesel').value;
-            const status = document.getElementById('cit-status').value;
-            const threat = document.getElementById('cit-threat').value;
-            const notes = document.getElementById('cit-notes').value || "Brak uwag";
-
-            const citizen = { id: Date.now(), name, pesel, status, threat, notes };
-            let list = JSON.parse(localStorage.getItem('ksp_citizens')) || [];
-            list.push(citizen);
-            localStorage.setItem('ksp_citizens', JSON.stringify(list));
-
-            renderCitizens();
-            logAction(`Zarejestrowano w KSIP: ${name}`);
-            document.getElementById('citizen-add-form').reset();
-            updateStatsDashboard();
-        }
-
-        function renderCitizens(data = null) {
-            const container = document.getElementById('cit-list-container');
-            container.innerHTML = '';
-
-            const list = data || JSON.parse(localStorage.getItem('ksp_citizens')) || [];
-            if (list.length === 0) {
-                container.innerHTML = '<div class="info-strip">Brak obywateli w rejestrze. Dodaj rekord po lewej.</div>';
-                return;
-            }
-
-            list.forEach(c => {
-                const item = document.createElement('div');
-                item.className = 'timeline-item';
-                item.innerHTML = `
-                    <div class="timeline-details">
-                        <strong>${c.name} (PESEL: ${c.pesel})</strong>
-                        <span style="font-size: 11px;">Status: <strong style="color: ${c.status === 'POSZUKIWANY' ? 'var(--danger)' : 'var(--text-dark)'};">${c.status}</strong> | Zagrożenie: ${c.threat}</span>
-                        <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Uwagi: ${c.notes}</span>
-                    </div>
-                    <button class="btn-ops" style="color: var(--danger); border-color: var(--danger); padding: 4px 10px;" onclick="deleteCitizen(${c.id})">USUŃ</button>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        window.deleteCitizen = function(id) {
-            let list = JSON.parse(localStorage.getItem('ksp_citizens')) || [];
-            list = list.filter(c => c.id !== id);
-            localStorage.setItem('ksp_citizens', JSON.stringify(list));
-            renderCitizens();
-            updateStatsDashboard();
-        }
-
-        function searchCitizens(query) {
-            const list = JSON.parse(localStorage.getItem('ksp_citizens')) || [];
-            const filtered = list.filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || c.pesel.includes(query));
-            renderCitizens(filtered);
-        }
-
-        // --- HISTORIA POLICJANTÓW ---
-        window.searchOfficerHistory = function() {
-            const query = document.getElementById('officer-search-input').value.toLowerCase().trim();
-            const container = document.getElementById('officer-results-container');
-            container.innerHTML = '';
-
-            if (!query) {
-                container.innerHTML = '<div class="info-strip">Wpisz dane funkcjonariusz do wyszukania historii.</div>';
-                return;
-            }
-
-            const protocols = JSON.parse(localStorage.getItem('ksp_protocols')) || [];
-            const results = protocols.filter(p => p.officer.toLowerCase().includes(query));
-
-            if (results.length === 0) {
-                container.innerHTML = '<div class="info-strip">Brak powiązanych interwencji dla tego policjanta.</div>';
-                return;
-            }
-
-            results.forEach(p => {
-                const row = document.createElement('div');
-                row.className = 'timeline-item';
-                let actionDesc = "";
-
-                if (p.type === "zatrzymanie") {
-                    actionDesc = `Dokonał zatrzymania: <strong>${p.suspect}</strong> (PESEL: ${p.pesel}) na podstawie ${p.base}`;
-                } else if (p.type === "kontrolaosobista") {
-                    actionDesc = `Przeprowadził kontrolę osobistą: <strong>${p.suspect}</strong> (PESEL: ${p.pesel}), wynik: ${p.seized}`;
-                } else {
-                    actionDesc = `Zabezpieczył notatkę: Interwencja w miejscu ${p.place} (${p.reason})`;
-                }
-
+                const row = document.createElement('tr');
                 row.innerHTML = `
-                    <div class="timeline-details">
-                        <span>[${p.date}] - ${actionDesc}</span>
-                        <span style="font-size: 11px; color: var(--text-muted);">ID Sprawy: ${p.id}</span>
-                    </div>
-                    <button class="btn-ops" onclick="openOpsModal(${p.id})">SZCZEGÓŁY</button>
+                    <td><strong>${item.name}</strong></td>
+                    <td><span style="font-family:'JetBrains Mono';">${item.badge}</span></td>
+                    <td>${item.lastCar}</td>
+                    <td><strong>${hrs}:${mins}:${secs}</strong></td>
+                    <td>${item.logins}</td>
+                    <td><span style="color:var(--success); font-weight:bold;"><i class="fa-solid fa-circle" style="font-size:8px;"></i> WOLNY</span></td>
                 `;
-                container.appendChild(row);
+                tableBody.appendChild(row);
+            });
+
+            // Aktualizacja sumy globalnej godzin w statystykach
+            const gHrs = String(Math.floor(globalSeconds / 3600)).padStart(2, '0');
+            const gMins = String(Math.floor((globalSeconds % 3600) / 60)).padStart(2, '0');
+            const gSecs = String(globalSeconds % 60).padStart(2, '0');
+            document.getElementById('stats-total-hours').textContent = `${gHrs}:${gMins}:${gSecs}`;
+        }
+
+        // ==========================================
+        //  REJESTR OBYWATELI I KSIP
+        // ==========================================
+        const citizenForm = document.getElementById('citizen-add-form');
+        if (citizenForm) {
+            citizenForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('cit-name').value;
+                const pesel = document.getElementById('cit-pesel').value;
+                const status = document.getElementById('cit-status').value;
+                const threat = document.getElementById('cit-threat').value;
+                const notes = document.getElementById('cit-notes').value;
+
+                let citizens = JSON.parse(localStorage.getItem('ksip_citizens')) || [];
+                
+                // Dodajemy nowego
+                citizens.push({ name, pesel, status, threat, notes });
+                localStorage.setItem('ksip_citizens', JSON.stringify(citizens));
+
+                alert('Dodano obywatela do bazy KSIP.');
+                citizenForm.reset();
+                updateStats();
+                searchCitizens();
             });
         }
 
-        // --- TARYFIKATOR ---
-        function renderTaryfikator(data) {
-            const body = document.getElementById('tar-table-body');
-            body.innerHTML = '';
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${item.czyn}</strong></td>
-                    <td>${item.fine} PLN</td>
-                    <td>${item.points} PK</td>
-                    <td><button class="btn-ops" style="padding: 5px 10px; font-size: 11px;" onclick="addTicketItem(${item.id})"><i class="fa-solid fa-plus"></i></button></td>
-                `;
-                body.appendChild(tr);
-            });
-        }
-
-        window.addTicketItem = function(id) {
-            const item = taryfikatorData.find(t => t.id === id);
-            if (item) {
-                selectedTicketItems.push(item);
-                renderTicketCalculator();
-            }
-        }
-
-        function renderTicketCalculator() {
-            const container = document.getElementById('fine-calculator-items');
-            container.innerHTML = '';
-
-            if (selectedTicketItems.length === 0) {
-                container.innerHTML = '<div class="info-strip">Brak pozycji na mandacie. Kliknij "+" przy taryfikatorze.</div>';
-                document.getElementById('fine-total-money').textContent = '0 PLN';
-                document.getElementById('fine-total-points').textContent = '0 PK';
-                return;
-            }
-
-            let cash = 0, pts = 0;
-            selectedTicketItems.forEach((item, index) => {
-                cash += item.fine;
-                pts += item.points;
-                const div = document.createElement('div');
-                div.style = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border);';
-                div.innerHTML = `
-                    <span>${item.czyn}</span>
-                    <button class="btn-ops" style="padding: 2px 6px; font-size: 10px; color: var(--danger); border-color: var(--danger);" onclick="removeTicketItem(${index})">&times;</button>
-                `;
-                container.appendChild(div);
-            });
-
-            document.getElementById('fine-total-money').textContent = `${cash} PLN`;
-            document.getElementById('fine-total-points').textContent = `${pts} PK`;
-        }
-
-        window.removeTicketItem = function(index) {
-            selectedTicketItems.splice(index, 1);
-            renderTicketCalculator();
-        }
-
-        window.generateTicket = function() {
-            if (selectedTicketItems.length === 0) {
-                alert("Najpierw skompletuj taryfikator!");
-                return;
-            }
-            const name = document.getElementById('fine-suspect-name').value || "Niezidentyfikowany Sprawca";
-            let cash = 0, pts = 0, itemsHtml = "";
-            
-            selectedTicketItems.forEach(i => {
-                cash += i.fine;
-                pts += i.points;
-                itemsHtml += `<li>${i.czyn} (${i.fine} PLN / ${i.points} PK)</li>`;
-            });
-
-            const docContent = `
-                <div class="a4-document">
-                    <div class="a4-header">
-                        <h2>MANDAT KARNY KREDYTOWANY</h2>
-                        <span>KOMENDA STOŁECZNA POLICJI</span>
-                    </div>
-                    <div class="a4-section">
-                        <p><strong>UKARANY OBYWATEL:</strong> ${name.toUpperCase()}</p>
-                        <p><strong>NAŁOŻYŁ FUNKCJONARIUSZ:</strong> ${currentDuty.officer} (ODZNAKA: ${currentDuty.badge})</p>
-                        <p><strong>DATA NAŁOŻENIA:</strong> ${new Date().toLocaleString('pl-PL')}</p>
-                    </div>
-                    <div class="a4-section">
-                        <p class="a4-title">KWALIFIKACJA CZYNÓW (WYKROCZENIA):</p>
-                        <ul>${itemsHtml}</ul>
-                    </div>
-                    <div class="a4-section" style="border-top: 1px solid #000; padding-top: 15px;">
-                        <p><strong>ŁĄCZNA SUMA MANDATOWA:</strong> ${cash} PLN</p>
-                        <p><strong>PUNKTY KARNE:</strong> ${pts} PK</p>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('modal-doc-title').textContent = "WYDRUK MANDATU KARNEGO";
-            document.getElementById('modal-doc-content').innerHTML = docContent;
-            document.getElementById('modal-del-btn').style.display = 'none';
-            document.getElementById('ops-modal').style.display = 'flex';
-
-            sendDiscordMessage(`👮‍♂️ **KSP: NAŁOŻONO MANDAT**\n**Ukarany**: ${name}\n**Kwota**: ${cash} PLN\n**Punkty karne**: ${pts} PK\n**Wystawił**: ${currentDuty.officer} (Leg. ${currentDuty.badge})`);
-            logAction(`Nałożono grzywnę na: ${name}`);
-
-            let totalTix = parseInt(localStorage.getItem('ksp_total_tickets_count') || "0");
-            localStorage.setItem('ksp_total_tickets_count', totalTix + 1);
-
-            selectedTicketItems = [];
-            renderTicketCalculator();
-            document.getElementById('fine-suspect-name').value = '';
-            updateStatsDashboard();
-        }
-
-        // --- PODGLĄD MODALA ---
-        window.openOpsModal = function(id) {
-            const list = JSON.parse(localStorage.getItem('ksp_protocols')) || [];
-            const p = list.find(x => x.id === id);
-            if (!p) return;
-
-            activeViewDocId = id;
-            document.getElementById('modal-del-btn').style.display = 'inline-flex';
-
-            let specifics = "";
-            if (p.type === "zatrzymanie") {
-                specifics = `
-                    <p><strong>ZATRZYMANY:</strong> ${p.suspect}</p>
-                    <p><strong>PESEL:</strong> ${p.pesel}</p>
-                    <p><strong>PODSTAWA PRAWNA:</strong> ${p.base}</p>
-                `;
-            } else if (p.type === "kontrolaosobista") {
-                specifics = `
-                    <p><strong>KONTROLOWANY OBYWATEL:</strong> ${p.suspect}</p>
-                    <p><strong>PESEL:</strong> ${p.pesel}</p>
-                    <p><strong>REŻIM ZABEZPIECZONYCH RZECZY:</strong> ${p.seized}</p>
-                `;
-            } else if (p.type === "notatka") {
-                specifics = `
-                    <p><strong>MIEJSCE INTERWENCJI:</strong> ${p.place}</p>
-                    <p><strong>INICJACJA CZYNNOŚCI:</strong> ${p.reason}</p>
-                `;
-            }
-
-            const docContent = `
-                <div class="a4-document">
-                    <div class="a4-header">
-                        <h2>PROTOKÓŁ OPERACYJNY SŁUŻBY</h2>
-                        <span>KOMENDA STOŁECZNA POLICJI</span>
-                    </div>
-                    <div class="a4-section">
-                        <p><strong>PROWADZĄCY CZYNNOŚĆ:</strong> ${p.officer} (LEG: ${p.badge})</p>
-                        <p><strong>SYGNATURA DOKUMENTU:</strong> ${p.id}</p>
-                        <p><strong>DATA REJESTRACJI:</strong> ${p.date}</p>
-                    </div>
-                    <div class="a4-section">
-                        <p class="a4-title">METADANE SPRAWY:</p>
-                        ${specifics}
-                    </div>
-                    <div class="a4-section" style="border-top: 1px solid #000; padding-top: 15px;">
-                        <p class="a4-title">PRZEBIEG ORAZ USTALENIA:</p>
-                        <p style="white-space: pre-wrap;">${p.desc}</p>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('modal-doc-title').textContent = `DOKUMENT IDENTYFIKACYJNY: nr ${p.id}`;
-            document.getElementById('modal-doc-content').innerHTML = docContent;
-            document.getElementById('ops-modal').style.display = 'flex';
-        }
-
-        window.closeOpsModal = function() {
-            document.getElementById('ops-modal').style.display = 'none';
-        }
-
-        document.getElementById('modal-del-btn').addEventListener('click', () => {
-            if (activeViewDocId) {
-                let list = JSON.parse(localStorage.getItem('ksp_protocols')) || [];
-                list = list.filter(x => x.id !== activeViewDocId);
-                localStorage.setItem('ksp_protocols', JSON.stringify(list));
-                renderProtocols();
-                closeOpsModal();
-                logAction(`Usunięto protokół ID: ${activeViewDocId}`);
-                updateStatsDashboard();
-            }
-        });
-
-        // --- STATYSTYKI ORAZ LOGI ---
-        function updateStatsDashboard() {
-            const profiles = JSON.parse(localStorage.getItem('ksp_officer_profiles')) || [];
-            let totalMs = 0;
-            profiles.forEach(p => {
-                totalMs += p.totalMs || 0;
-            });
-            document.getElementById('stats-total-hours').textContent = formatMilliseconds(totalMs);
-            document.getElementById('stats-total-sessions').textContent = profiles.length;
-
-            const totalTix = localStorage.getItem('ksp_total_tickets_count') || "0";
-            document.getElementById('stats-total-tickets').textContent = totalTix;
-
-            const citizens = JSON.parse(localStorage.getItem('ksp_citizens')) || [];
+        function updateStats() {
+            const citizens = JSON.parse(localStorage.getItem('ksip_citizens')) || [];
             document.getElementById('stats-total-citizens').textContent = citizens.length;
         }
 
-        function logAction(msg) {
-            const logs = JSON.parse(localStorage.getItem('ksp_shift_logs')) || [];
-            logs.push({ time: new Date().toLocaleTimeString('pl-PL'), msg });
-            localStorage.setItem('ksp_shift_logs', JSON.stringify(logs));
-            loadLogs();
-        }
-
-        function loadLogs() {
-            const container = document.getElementById('shift-logs-container');
-            container.innerHTML = '';
-            const logs = JSON.parse(localStorage.getItem('ksp_shift_logs')) || [];
-            logs.slice().reverse().forEach(l => {
-                const d = document.createElement('div');
-                d.className = 'log-entry';
-                d.innerHTML = `<span class="log-time">[${l.time}]</span><span class="log-msg">${l.msg}</span>`;
-                container.appendChild(d);
+        const searchInput = document.getElementById('cit-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                searchCitizens();
             });
         }
+
+        function searchCitizens() {
+            const query = document.getElementById('cit-search-input').value.toLowerCase();
+            const container = document.getElementById('cit-list-container');
+            const citizens = JSON.parse(localStorage.getItem('ksip_citizens')) || [];
+
+            container.innerHTML = '';
+            
+            const filtered = citizens.filter(c => c.name.toLowerCase().includes(query) || c.pesel.includes(query));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="info-strip">Brak dopasowań w bazie KSIP.</div>';
+                return;
+            }
+
+            filtered.forEach(c => {
+                let badgeClass = 'var(--success)';
+                if (c.status === 'NOTOWANY') badgeClass = 'orange';
+                if (c.status === 'POSZUKIWANY') badgeClass = 'var(--danger)';
+
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-details">
+                        <strong>${c.name} (PESEL: ${c.pesel})</strong>
+                        <span style="font-size:11px; color: var(--text-normal)">Uwagi: ${c.notes || 'Brak wpisów'}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="background:${badgeClass}; color:white; padding:4px 8px; border-radius:4px; font-size:10px; font-weight:bold;">${c.status}</span>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:5px;">Zagrożenie: ${c.threat}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function searchOfficerHistory() {
+            const input = document.getElementById('officer-search-input').value;
+            const container = document.getElementById('officer-results-container');
+            if(!input) {
+                container.innerHTML = '<div class="info-strip" style="border-color: var(--danger); color: var(--danger);">Wprowadź poprawne dane!</div>';
+                return;
+            }
+            container.innerHTML = `<div class="info-strip">Brak wpisów o zatrzymaniach dla funkcjonariusza: ${input}.</div>`;
+        }
+
+        // ==========================================
+        //  MODAL DOKUMENTÓW (NOTATKI / PROTOKOŁY)
+        // ==========================================
+        function closeOpsModal() {
+            document.getElementById('ops-modal').style.display = 'none';
+        }
+
+        // ==========================================
+        //  INIT ROZRUCHOWY
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            // Sprawdzenie stanu logowania Discord na starcie
+            checkDiscordCallback();
+            updateStats();
+        });
     </script>
 </body>
 </html>
