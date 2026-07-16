@@ -1,0 +1,70 @@
+LIBERTY OPERATIONS CENTER — V3 CITY HUB PREVIEW
+================================================
+
+GŁÓWNA IDEA
+KSP nie jest już całą aplikacją. Jest jednym z modułów dużego, niezależnego centrum
+operacyjnego serwera ER:LC. Wszystkie przyszłe moduły będą korzystać z jednego konta
+Discord, wspólnego rdzenia zdarzeń i jednej bazy danych.
+
+NOWY EKRAN STARTOWY
+- centrum całego miasta zamiast samego panelu policyjnego,
+- osiem dużych modułów usług,
+- puls miasta wykorzystujący działające dane KSP,
+- siatka stanu integracji Discord / bot / ER:LC / webhooki,
+- responsywny wygląd na komputerze i telefonie.
+
+MODUŁY W V3 PREVIEW
+- KSP / Policja — działająca dotychczasowa baza i CAD,
+- PRM / Ratownictwo — pełny wizualny podgląd przyszłych funkcji,
+- PSP / Straż pożarna — podgląd dowodzenia działaniami,
+- PD / Drogi i transport — podgląd lawet, dróg i depozytu,
+- wspólne centrum zdarzeń wszystkich frakcji,
+- Session Director do planowania i odtwarzania sesji RP,
+- ER:LC Live Gateway,
+- profil cywila,
+- firmy i urzędy,
+- Discord Hub,
+- Innovation Lab.
+
+FUNKCJE, KTÓRE JUŻ DZIAŁAJĄ
+- logowanie Discord,
+- weryfikacja członkostwa na wskazanym serwerze,
+- opcjonalna brama roli przez DISCORD_REQUIRE_ROLE,
+- wszystkie istniejące kartoteki KSP,
+- mandaty, zatrzymania, raporty, poszukiwani i dowody,
+- aktywna służba i ranking godzin,
+- patrole, callsigny i statusy,
+- CAD i przydzielanie zgłoszeń,
+- dziennik operacji,
+- wykrywanie gotowości integracji bez ujawniania sekretów.
+
+NA RAZIE PODGLĄD, BEZ ZAPISU
+Nowe moduły PRM, PSP, PD, cywila, firm, sesji i Innovation Lab pokazują docelowy
+interfejs oraz zakres funkcji. Nie tworzą jeszcze własnych rekordów w bazie.
+
+POMYSŁY WYRÓŻNIAJĄCE SYSTEM
+- Universal Incident Core: jedno zdarzenie dla wszystkich frakcji,
+- RP Event Graph: relacje między postaciami, pojazdami, raportami i zdarzeniami,
+- Session Time Machine: odtworzenie przebiegu całej sesji,
+- Digital Twin: trwały model świata RP niezależny od jednej rozgrywki,
+- Scenario Orchestrator: sterowanie fazami scenariusza,
+- automatyczny raport After Action Review,
+- World Continuity: konsekwencje przechodzące na kolejne sesje.
+
+TESTY
+- składnia backendu Node.js,
+- składnia całego kodu JavaScript przeglądarki,
+- uruchomienie serwera lokalnego,
+- logowanie testowe,
+- ekran centrum miasta,
+- przejścia między KSP, PRM i ER:LC Live,
+- start i koniec służby,
+- utworzenie, przydział i zamknięcie zgłoszenia CAD.
+
+
+HOTFIX 3.0.1
+- dodano awaryjny tryb podgladu bez Discorda,
+- podglad jest tylko do odczytu,
+- wszystkie operacje POST/PUT/PATCH/DELETE sa blokowane dla goscia,
+- dodano wyrazny baner trybu podgladu,
+- logowanie Discord nadal daje pelny dostep.
